@@ -235,9 +235,11 @@ const LandingPage = () => {
                                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all"></span>
                             </a>
                         ))}
+                        <Link to="/login" className="w-full">
                         <button className="px-6 py-2 border border-white/20 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] active:scale-95 transition-all duration-500 font-black tracking-widest text-[10px] uppercase">
                             LOGIN
                         </button>
+                        </Link>
                     </div>
 
                     {/* Mobile Right Symmetrical Icon */}
