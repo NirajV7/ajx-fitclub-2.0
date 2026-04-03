@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
+// Firebase Auth imports
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import SocialLogin from "./SocialLogin.jsx";
@@ -58,16 +59,19 @@ const SigninPage = () => {
         setStatus('AUTHENTICATING');
 
         try {
-            // Tactical Bypass: Firebase requires 6 chars, so we prefix your 4-digit key
+            // Tactical Bypass: Firebase requires 6 chars, prefixing the 4-digit key
             const tacticalPassword = `AJX-${formData.code}`;
             await signInWithEmailAndPassword(auth, formData.email, tacticalPassword);
 
             console.log("PROTOCOL_SUCCESS: Member Authorized");
+
+            // STRATEGY 3: Send them to the dashboard.
+            // The Dashboard's onSnapshot will determine if they see the Lock or the Data.
             navigate("/dashboard");
         } catch (error) {
             console.error("AUTH_FAILURE:", error.message);
             setStatus('ERROR');
-            setTimeout(() => setStatus('IDLE'), 3000); // Reset error state after 3s
+            setTimeout(() => setStatus('IDLE'), 3000);
         }
     };
 
@@ -105,7 +109,7 @@ const SigninPage = () => {
                                     {status === 'ERROR' ? 'Access Denied: Invalid Key' : 'Security Protocol Active'}
                                 </span>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1">Authenticate.</h1>
+                            <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1 text-balance">Authenticate.</h1>
                             <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase leading-relaxed">Enter your credentials to access the terminal</p>
                         </div>
 
@@ -150,8 +154,8 @@ const SigninPage = () => {
                                 disabled={!isAuthReady}
                                 className={`group relative w-full flex items-center justify-center gap-3 py-5 font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isAuthReady ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
                             >
-                                <span className="relative z-10">
-                                    {status === 'AUTHENTICATING' ? 'Verifying...' : (isAuthReady ? 'Access Portal' : 'Awaiting Auth')}
+                                <span className="relative z-10 font-bold">
+                                    {status === 'AUTHENTICATING' ? 'VERIFYING...' : (isAuthReady ? 'ACCESS PORTAL' : 'AWAITING AUTH')}
                                 </span>
                                 <ArrowRight className={`relative z-10 w-4 h-4 transition-transform ${isAuthReady ? 'group-hover:translate-x-1' : 'opacity-20'}`} />
                             </button>
@@ -166,7 +170,7 @@ const SigninPage = () => {
 
                                 <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center">
                                     <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Not yet recognized?</p>
-                                    <Link to="/signup" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link">
+                                    <Link to="/signup" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link font-bold">
                                         Initialize Profile
                                         <ArrowRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
                                     </Link>
@@ -179,10 +183,10 @@ const SigninPage = () => {
                         <div className="flex items-center gap-2">
                             <Cpu size={10} className="text-[#ccff00] animate-pulse" />
                             <span className="text-[7px] font-mono text-white uppercase tracking-widest">
-                                Connection: {status === 'AUTHENTICATING' ? 'SYNCING' : 'SECURE'}
+                                CONNECTION: {status === 'AUTHENTICATING' ? 'SYNCING' : 'SECURE'}
                             </span>
                         </div>
-                        <span className="text-[7px] font-mono text-white uppercase tracking-widest">Terminal: AJX.SIG.04</span>
+                        <span className="text-[7px] font-mono text-white uppercase tracking-widest font-bold">TERMINAL: AJX.SIG.04</span>
                     </div>
                 </div>
             </main>

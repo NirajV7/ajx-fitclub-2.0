@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+// Added db, doc, and setDoc to initialize the user profile
+import { auth, db } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 import SocialLogin from "./SocialLogin.jsx";
 
 // --- SHARED VISUAL COMPONENTS ---
@@ -68,12 +70,26 @@ const SignupPage = () => {
 
         setStatus('PROCESSING');
         try {
-            // Tactical Bypass: Firebase requires 6 chars, so we prefix your 4-digit key
+            // Tactical Bypass: Firebase requires 6 chars, prefixing the 4-digit key
             const tacticalPassword = `AJX-${formData.code}`;
-            await createUserWithEmailAndPassword(auth, formData.email, tacticalPassword);
+            const userCredential = await createUserWithEmailAndPassword(auth, formData.email, tacticalPassword);
+            const user = userCredential.user;
 
-            console.log("INITIALIZATION_COMPLETE: Profile Created");
-            navigate("/verify-key");
+            // STRATEGY 3 INITIALIZATION: Create the user profile as a 'RECRUIT'
+            // This ensures the Dashboard.jsx sees them as unauthorized initially.
+            await setDoc(doc(db, "users", user.uid), {
+                firstName: formData.firstName.toUpperCase(),
+                lastName: formData.lastName.toUpperCase(),
+                email: formData.email.toLowerCase(),
+                tier: 'RECRUIT', // The locked state
+                createdAt: new Date(),
+                status: 'PENDING_ACTIVATION'
+            });
+
+            console.log("INITIALIZATION_COMPLETE: Profile Created as RECRUIT");
+
+            // REDIRECT: Go to dashboard to show the "Locked" state
+            navigate("/dashboard");
         } catch (error) {
             console.error("INITIALIZATION_FAILURE:", error.message);
             setStatus('ERROR');
@@ -118,7 +134,7 @@ const SignupPage = () => {
                                 </span>
                             </div>
                             <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1">Initialize.</h1>
-                            <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase">Complete all biometric fields</p>
+                            <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase text-balance">Complete all biometric fields to establish your terminal presence.</p>
                         </div>
 
                         <form className="space-y-4" onSubmit={handleSignup}>
@@ -197,8 +213,8 @@ const SignupPage = () => {
                                 disabled={!isFormValid}
                                 className={`group relative w-full flex items-center justify-center gap-3 py-4 font-black uppercase tracking-[0.3em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isFormValid ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
                             >
-                                <span className="relative z-10">
-                                    {status === 'PROCESSING' ? 'Transmitting...' : (isFormValid ? 'Start Transformation' : 'Awaiting Full Auth')}
+                                <span className="relative z-10 font-bold">
+                                    {status === 'PROCESSING' ? 'TRANSMITTING...' : (isFormValid ? 'START TRANSFORMATION' : 'AWAITING FULL AUTH')}
                                 </span>
                                 <ArrowRight className={`relative z-10 w-4 h-4 transition-transform ${isFormValid ? 'group-hover:translate-x-1' : 'opacity-20'}`} />
                             </button>
@@ -208,7 +224,7 @@ const SignupPage = () => {
 
                         </form>
 
-                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center">
+                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center text-balance">
                             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Existing Recruit?</p>
                             <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link">
                                 Secure Login Entry
