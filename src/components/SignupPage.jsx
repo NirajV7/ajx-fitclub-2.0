@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
-// useAuthState is our primary sensor for session detection
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -36,7 +35,6 @@ const MobileMenuToggle = ({ side }) => (
 );
 
 const SignupPage = () => {
-    // Double Guard: Detect existing session immediately
     const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
 
@@ -49,14 +47,22 @@ const SignupPage = () => {
     });
     const [status, setStatus] = useState('IDLE');
 
-    // REPLACEMENT LOGIC: Overwrite history to prevent back-navigation
+    // UPDATED GUARD: Distinguish between active login and back-button usage
     useEffect(() => {
         if (user && !authLoading) {
-            navigate("/dashboard", { replace: true });
+            const isActiveAuth = sessionStorage.getItem('ajx_auth_active');
+
+            if (isActiveAuth) {
+                // User just signed up/logged in. Proceed to Dashboard.
+                sessionStorage.removeItem('ajx_auth_active'); // Clear flag immediately
+                navigate("/dashboard", { replace: true });
+            } else {
+                // No flag means they hit "Back" from dashboard. Send to Home.
+                navigate("/", { replace: true });
+            }
         }
     }, [user, authLoading, navigate]);
 
-    // RENDER GUARD: If session exists, show tactical loader instead of form
     if (authLoading || user) {
         return (
             <div className="h-screen bg-black flex flex-col items-center justify-center">
@@ -106,7 +112,8 @@ const SignupPage = () => {
                 status: 'PENDING_ACTIVATION'
             });
 
-            // Secure redirect with history replacement
+            // Set flag before manual navigation
+            sessionStorage.setItem('ajx_auth_active', 'true');
             navigate("/dashboard", { replace: true });
         } catch (error) {
             console.error("INITIALIZATION_FAILURE:", error.message);
@@ -118,7 +125,7 @@ const SignupPage = () => {
     return (
         <div className="h-screen flex flex-col bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-hidden">
             <nav className="shrink-0 w-full z-[100] bg-black/95 backdrop-blur-xl py-8 border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative text-white font-bold">
+                <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative text-white font-bold font-black">
                     <MobileMenuToggle side="left" />
                     <div className="flex-1 md:flex-none flex justify-center md:justify-start text-white font-bold">
                         <BrandLogo />
@@ -143,7 +150,7 @@ const SignupPage = () => {
                     <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 md:p-10 rounded-[32px] relative overflow-hidden shadow-2xl">
                         <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/20 to-transparent scan-line"></div>
 
-                        <div className="mb-6 text-center">
+                        <div className="mb-6 text-center font-black">
                             <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#ccff00]/30 rounded-full bg-[#ccff00]/5 mb-4">
                                 <ShieldCheck size={12} className={status === 'ERROR' ? 'text-red-500' : 'text-[#ccff00]'} />
                                 <span className={`text-[8px] font-black uppercase tracking-[0.3em] ${status === 'ERROR' ? 'text-red-500' : 'text-[#ccff00]'}`}>
@@ -163,7 +170,7 @@ const SignupPage = () => {
                                         value={formData.firstName}
                                         onChange={(e) => handleNameChange(e, 'firstName')}
                                         placeholder="ALEX"
-                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] uppercase placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all"
+                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] uppercase placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all font-bold"
                                     />
                                 </div>
                                 <div className="space-y-1.5 group">
@@ -174,12 +181,12 @@ const SignupPage = () => {
                                         value={formData.lastName}
                                         onChange={(e) => handleNameChange(e, 'lastName')}
                                         placeholder="DOE"
-                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] uppercase placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all"
+                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] uppercase placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all font-bold"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 group">
+                            <div className="space-y-1.5 group font-bold">
                                 <span className="text-[8px] font-black uppercase text-white/40 group-focus-within:text-[#ccff00] transition-colors">[ BIOMETRIC_LINK ]</span>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#ccff00]" size={16} />
@@ -189,13 +196,13 @@ const SignupPage = () => {
                                         value={formData.email}
                                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                                         placeholder="ALEX.DOE@GMAIL.COM"
-                                        className={`w-full bg-white/[0.05] border rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-[11px] uppercase placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all ${formData.email.length > 0 && !isEmailValid ? 'border-red-500/30' : 'border-white/10'}`}
+                                        className={`w-full bg-white/[0.05] border rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-[11px] uppercase placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all font-bold ${formData.email.length > 0 && !isEmailValid ? 'border-red-500/30' : 'border-white/10'}`}
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5 group">
+                                <div className="space-y-1.5 group font-bold">
                                     <span className="text-[8px] font-black uppercase text-white/40 group-focus-within:text-[#ccff00]">[ 4_DIGIT_KEY ]</span>
                                     <input
                                         type="password"
@@ -204,10 +211,10 @@ const SignupPage = () => {
                                         value={formData.code}
                                         onChange={(e) => handleCodeChange(e, 'code')}
                                         placeholder="0000"
-                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all"
+                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all font-bold"
                                     />
                                 </div>
-                                <div className="space-y-1.5 group">
+                                <div className="space-y-1.5 group font-bold">
                                     <span className={`text-[8px] font-black uppercase transition-colors ${codesMatch ? 'text-[#ccff00]' : 'text-white/40'}`}>[ VERIFY_KEY ]</span>
                                     <input
                                         type="password"
@@ -216,7 +223,7 @@ const SignupPage = () => {
                                         value={formData.confirmCode}
                                         onChange={(e) => handleCodeChange(e, 'confirmCode')}
                                         placeholder="0000"
-                                        className={`w-full bg-white/[0.05] border rounded-xl py-3.5 px-4 text-white font-bold text-[11px] placeholder:text-white/40 outline-none transition-all duration-300 ${codesMatch ? 'border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'border-white/10'}`}
+                                        className={`w-full bg-white/[0.05] border rounded-xl py-3.5 px-4 text-white font-bold text-[11px] placeholder:text-white/40 outline-none transition-all duration-300 font-bold ${codesMatch ? 'border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'border-white/10'}`}
                                     />
                                 </div>
                             </div>
@@ -224,7 +231,7 @@ const SignupPage = () => {
                             <button
                                 type="submit"
                                 disabled={!isFormValid}
-                                className={`group relative w-full flex items-center justify-center gap-3 py-4 font-black uppercase tracking-[0.3em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isFormValid ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
+                                className={`group relative w-full flex items-center justify-center gap-3 py-4 font-black uppercase tracking-[0.3em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isFormValid ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5 font-black'}`}
                             >
                                 <span className="relative z-10 font-bold">
                                     {status === 'PROCESSING' ? 'TRANSMITTING...' : (isFormValid ? 'START TRANSFORMATION' : 'AWAITING FULL AUTH')}
@@ -235,9 +242,9 @@ const SignupPage = () => {
                             <SocialLogin type="signup" />
                         </form>
 
-                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center text-balance font-bold text-white">
+                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center text-balance font-bold text-white font-black">
                             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Existing Recruit?</p>
-                            <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link font-bold">
+                            <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link font-bold font-black">
                                 Secure Login Entry
                                 <ArrowRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
                             </Link>
