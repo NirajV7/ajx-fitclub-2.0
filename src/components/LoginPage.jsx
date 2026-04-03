@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
-// Firebase Auth imports
+// Added useAuthState for real-time session guarding
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import SocialLogin from "./SocialLogin.jsx";
@@ -34,12 +35,22 @@ const MobileMenuToggle = ({ side }) => (
 );
 
 const SigninPage = () => {
+    // Auth Guard: Identify if a session is already active
+    const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         email: '',
         code: ''
     });
     const [status, setStatus] = useState('IDLE'); // IDLE, AUTHENTICATING, ERROR
+
+    // AUTO-REDIRECT: If a member is already authorized, bypass the login screen
+    useEffect(() => {
+        if (user && !authLoading) {
+            navigate("/dashboard", { replace: true });
+        }
+    }, [user, authLoading, navigate]);
 
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
     const isCodeComplete = formData.code.length === 4;
@@ -65,15 +76,17 @@ const SigninPage = () => {
 
             console.log("PROTOCOL_SUCCESS: Member Authorized");
 
-            // STRATEGY 3: Send them to the dashboard.
-            // The Dashboard's onSnapshot will determine if they see the Lock or the Data.
-            navigate("/dashboard");
+            // Use { replace: true } to overwrite login history and prevent loops
+            navigate("/dashboard", { replace: true });
         } catch (error) {
             console.error("AUTH_FAILURE:", error.message);
             setStatus('ERROR');
             setTimeout(() => setStatus('IDLE'), 3000);
         }
     };
+
+    // While checking authentication state, return null to eliminate flicker
+    if (authLoading) return null;
 
     return (
         <div className="h-screen flex flex-col bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-hidden">
@@ -84,12 +97,12 @@ const SigninPage = () => {
                     <div className="flex-1 md:flex-none flex justify-center md:justify-start">
                         <BrandLogo />
                     </div>
-                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase">
-                        <Link to="/" className="hover:text-[#ccff00] transition-colors tracking-widest text-white font-bold relative group/link">
+                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase font-black">
+                        <Link to="/" className="hover:text-[#ccff00] transition-colors tracking-widest text-white font-bold relative group/link uppercase">
                             Home
-                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all"></span>
+                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all font-bold"></span>
                         </Link>
-                        <Link to="/signup" className="px-6 py-2 border border-white/20 text-white rounded-full hover:border-[#ccff00] hover:text-[#ccff00] transition-all duration-500 font-black tracking-widest text-[10px] uppercase">
+                        <Link to="/signup" className="px-6 py-2 border border-white/20 text-white rounded-full hover:border-[#ccff00] hover:text-[#ccff00] transition-all duration-500 font-black tracking-widest text-[10px] uppercase font-bold">
                             New Recruit?
                         </Link>
                     </div>
@@ -109,12 +122,12 @@ const SigninPage = () => {
                                     {status === 'ERROR' ? 'Access Denied: Invalid Key' : 'Security Protocol Active'}
                                 </span>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1 text-balance">Authenticate.</h1>
+                            <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1 text-balance font-bold">Authenticate.</h1>
                             <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase leading-relaxed">Enter your credentials to access the terminal</p>
                         </div>
 
                         <form className="space-y-6" onSubmit={handleAuth}>
-                            <div className="space-y-2 group">
+                            <div className="space-y-2 group font-bold">
                                 <span className="text-[8px] font-black uppercase text-white/40 group-focus-within:text-[#ccff00] transition-colors">[ BIOMETRIC_ID ]</span>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#ccff00]" size={16} />
@@ -129,7 +142,7 @@ const SigninPage = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-2 group">
+                            <div className="space-y-2 group font-bold">
                                 <div className="flex justify-between items-center">
                                     <span className="text-[8px] font-black uppercase text-white/40 group-focus-within:text-[#ccff00]">[ SECURITY_KEY ]</span>
                                     {isCodeComplete && <span className="text-[7px] text-[#ccff00] font-bold uppercase tracking-widest animate-pulse">Key Ready</span>}
@@ -152,7 +165,7 @@ const SigninPage = () => {
                             <button
                                 type="submit"
                                 disabled={!isAuthReady}
-                                className={`group relative w-full flex items-center justify-center gap-3 py-5 font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isAuthReady ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
+                                className={`group relative w-full flex items-center justify-center gap-3 py-5 font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isAuthReady ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5 font-bold'}`}
                             >
                                 <span className="relative z-10 font-bold">
                                     {status === 'AUTHENTICATING' ? 'VERIFYING...' : (isAuthReady ? 'ACCESS PORTAL' : 'AWAITING AUTH')}
@@ -160,10 +173,9 @@ const SigninPage = () => {
                                 <ArrowRight className={`relative z-10 w-4 h-4 transition-transform ${isAuthReady ? 'group-hover:translate-x-1' : 'opacity-20'}`} />
                             </button>
 
-                            {/* --- FEDERATED IDENTITY --- */}
                             <SocialLogin type="login" />
 
-                            <div className="flex flex-col items-center gap-6 mt-4">
+                            <div className="flex flex-col items-center gap-6 mt-4 font-bold">
                                 <button type="button" className="text-[9px] font-bold uppercase tracking-widest text-white/30 hover:text-white transition-colors underline-offset-4 hover:underline">
                                     Forgot Security Key?
                                 </button>

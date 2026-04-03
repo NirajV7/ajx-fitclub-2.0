@@ -51,7 +51,8 @@ const VerifyKey = () => {
                     // Redundant backup for offline-first speed
                     localStorage.setItem('memberTier', data.tier || 'recruit');
 
-                    setTimeout(() => navigate('/dashboard'), 1000);
+                    // Use { replace: true } so they can't "Go Back" to the key entry
+                    setTimeout(() => navigate('/dashboard', { replace: true }), 1000);
                 } else {
                     throw new Error("KEY_DEACTIVATED");
                 }

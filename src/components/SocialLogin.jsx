@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-// Import signInWithRedirect and getRedirectResult
+import React, { useEffect, useState } from 'react';
 import { signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider, db } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -8,10 +7,11 @@ import { LogIn, Cpu } from 'lucide-react';
 
 const SocialLogin = ({ type }) => {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false); // New loading state
 
-    // Handle the redirect result when the user returns to the page
     useEffect(() => {
         const handleRedirectResult = async () => {
+            setIsLoading(true); // Start loading immediately
             try {
                 const result = await getRedirectResult(auth);
                 if (result) {
@@ -26,38 +26,41 @@ const SocialLogin = ({ type }) => {
                             email: user.email.toLowerCase(),
                             tier: 'RECRUIT',
                             createdAt: new Date(),
-                            status: 'PENDING_ACTIVATION',
-                            authMethod: 'GOOGLE'
+                            status: 'PENDING_ACTIVATION'
                         });
                     }
-                    navigate("/dashboard");
+                    // CRITICAL: Use { replace: true } to remove Signup from history
+                    navigate("/dashboard", { replace: true });
+                } else {
+                    setIsLoading(false); // No redirect result, stop loading
                 }
             } catch (error) {
-                console.error("REDIRECT_RESULT_FAILURE:", error.message);
+                console.error("REDIRECT_FAILURE:", error.message);
+                setIsLoading(false);
             }
         };
         handleRedirectResult();
     }, [navigate]);
 
-    const handleGoogleAction = async () => {
-        try {
-            // Switch from Pop-up to Redirect to bypass browser blockers
-            await signInWithRedirect(auth, googleProvider);
-        } catch (error) {
-            console.error("AUTH_INITIALIZATION_FAILURE:", error.message);
-        }
-    };
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-8 opacity-50">
+                <Cpu size={20} className="text-[#ccff00] animate-spin mb-2" />
+                <span className="text-[8px] font-black uppercase tracking-[0.3em]">Syncing Identity...</span>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full space-y-4">
             <div className="flex items-center gap-4 opacity-20">
                 <div className="h-[1px] flex-1 bg-white"></div>
-                <span className="text-[7px] font-black tracking-[0.3em] uppercase">OR</span>
+                <span className="text-[7px] font-black tracking-[0.3em] uppercase text-white">OR</span>
                 <div className="h-[1px] flex-1 bg-white"></div>
             </div>
 
             <button
-                onClick={handleGoogleAction}
+                onClick={() => signInWithRedirect(auth, googleProvider)}
                 type="button"
                 className="w-full flex items-center justify-center gap-3 py-4 border border-white/10 rounded-2xl text-white/60 hover:text-[#ccff00] hover:border-[#ccff00]/40 hover:bg-[#ccff00]/5 transition-all duration-300 group"
             >

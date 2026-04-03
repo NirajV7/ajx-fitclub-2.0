@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
+// Added useAuthState to prevent flicker and unauthorized access
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { createUserWithEmailAndPassword } from "firebase/auth";
-// Added db, doc, and setDoc to initialize the user profile
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import SocialLogin from "./SocialLogin.jsx";
@@ -35,7 +36,10 @@ const MobileMenuToggle = ({ side }) => (
 );
 
 const SignupPage = () => {
+    // Auth Guard: Detect if a user session is already active
+    const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -44,6 +48,13 @@ const SignupPage = () => {
         confirmCode: ''
     });
     const [status, setStatus] = useState('IDLE'); // IDLE, PROCESSING, ERROR
+
+    // PREVENTION LOGIC: If already logged in, bypass signup screen immediately
+    useEffect(() => {
+        if (user && !authLoading) {
+            navigate("/dashboard", { replace: true });
+        }
+    }, [user, authLoading, navigate]);
 
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
     const codesMatch = formData.code === formData.confirmCode && formData.code.length === 4;
@@ -70,32 +81,32 @@ const SignupPage = () => {
 
         setStatus('PROCESSING');
         try {
-            // Tactical Bypass: Firebase requires 6 chars, prefixing the 4-digit key
             const tacticalPassword = `AJX-${formData.code}`;
             const userCredential = await createUserWithEmailAndPassword(auth, formData.email, tacticalPassword);
             const user = userCredential.user;
 
-            // STRATEGY 3 INITIALIZATION: Create the user profile as a 'RECRUIT'
-            // This ensures the Dashboard.jsx sees them as unauthorized initially.
             await setDoc(doc(db, "users", user.uid), {
                 firstName: formData.firstName.toUpperCase(),
                 lastName: formData.lastName.toUpperCase(),
                 email: formData.email.toLowerCase(),
-                tier: 'RECRUIT', // The locked state
+                tier: 'RECRUIT',
                 createdAt: new Date(),
                 status: 'PENDING_ACTIVATION'
             });
 
             console.log("INITIALIZATION_COMPLETE: Profile Created as RECRUIT");
 
-            // REDIRECT: Go to dashboard to show the "Locked" state
-            navigate("/dashboard");
+            // Use { replace: true } to prevent going back to signup after entry
+            navigate("/dashboard", { replace: true });
         } catch (error) {
             console.error("INITIALIZATION_FAILURE:", error.message);
             setStatus('ERROR');
             setTimeout(() => setStatus('IDLE'), 3000);
         }
     };
+
+    // While checking auth state, return null to avoid the signup flicker
+    if (authLoading) return null;
 
     return (
         <div className="h-screen flex flex-col bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-hidden">
@@ -106,13 +117,13 @@ const SignupPage = () => {
                     <div className="flex-1 md:flex-none flex justify-center md:justify-start">
                         <BrandLogo />
                     </div>
-                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase">
+                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase font-black">
                         <Link to="/" className="hover:text-[#ccff00] transition-colors tracking-widest uppercase text-white font-bold relative group/link">
                             Home
                             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all"></span>
                         </Link>
                         <Link to="/login">
-                            <button className="px-6 py-2 border border-[#ccff00] text-[#ccff00] rounded-full hover:bg-[#ccff00] hover:text-black transition-all duration-500 font-black tracking-widest text-[10px] uppercase">
+                            <button className="px-6 py-2 border border-[#ccff00] text-[#ccff00] rounded-full hover:bg-[#ccff00] hover:text-black transition-all duration-500 font-black tracking-widest text-[10px] uppercase font-bold">
                                 Login Entry
                             </button>
                         </Link>
@@ -219,14 +230,13 @@ const SignupPage = () => {
                                 <ArrowRight className={`relative z-10 w-4 h-4 transition-transform ${isFormValid ? 'group-hover:translate-x-1' : 'opacity-20'}`} />
                             </button>
 
-                            {/* --- FEDERATED IDENTITY --- */}
                             <SocialLogin type="signup" />
 
                         </form>
 
                         <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center text-balance">
                             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Existing Recruit?</p>
-                            <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link">
+                            <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link font-bold">
                                 Secure Login Entry
                                 <ArrowRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
                             </Link>
@@ -240,7 +250,7 @@ const SignupPage = () => {
                                 Auth Protocol: {status === 'PROCESSING' ? 'UPLOADING' : 'READY'}
                             </span>
                         </div>
-                        <span className="text-[7px] font-mono text-white uppercase tracking-widest">Ver: AJX.RECRUIT.22</span>
+                        <span className="text-[7px] font-mono text-white uppercase tracking-widest font-bold">Ver: AJX.RECRUIT.22</span>
                     </div>
                 </div>
             </main>
