@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
-// Added useAuthState to prevent flicker and unauthorized access
+// useAuthState is our primary sensor for session detection
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -36,7 +36,7 @@ const MobileMenuToggle = ({ side }) => (
 );
 
 const SignupPage = () => {
-    // Auth Guard: Detect if a user session is already active
+    // Double Guard: Detect existing session immediately
     const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
 
@@ -47,14 +47,26 @@ const SignupPage = () => {
         code: '',
         confirmCode: ''
     });
-    const [status, setStatus] = useState('IDLE'); // IDLE, PROCESSING, ERROR
+    const [status, setStatus] = useState('IDLE');
 
-    // PREVENTION LOGIC: If already logged in, bypass signup screen immediately
+    // REPLACEMENT LOGIC: Overwrite history to prevent back-navigation
     useEffect(() => {
         if (user && !authLoading) {
             navigate("/dashboard", { replace: true });
         }
     }, [user, authLoading, navigate]);
+
+    // RENDER GUARD: If session exists, show tactical loader instead of form
+    if (authLoading || user) {
+        return (
+            <div className="h-screen bg-black flex flex-col items-center justify-center">
+                <Cpu size={24} className="text-[#ccff00] animate-spin mb-4" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 animate-pulse">
+                    Authenticating Profile...
+                </span>
+            </div>
+        );
+    }
 
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
     const codesMatch = formData.code === formData.confirmCode && formData.code.length === 4;
@@ -83,9 +95,9 @@ const SignupPage = () => {
         try {
             const tacticalPassword = `AJX-${formData.code}`;
             const userCredential = await createUserWithEmailAndPassword(auth, formData.email, tacticalPassword);
-            const user = userCredential.user;
+            const newUser = userCredential.user;
 
-            await setDoc(doc(db, "users", user.uid), {
+            await setDoc(doc(db, "users", newUser.uid), {
                 firstName: formData.firstName.toUpperCase(),
                 lastName: formData.lastName.toUpperCase(),
                 email: formData.email.toLowerCase(),
@@ -94,9 +106,7 @@ const SignupPage = () => {
                 status: 'PENDING_ACTIVATION'
             });
 
-            console.log("INITIALIZATION_COMPLETE: Profile Created as RECRUIT");
-
-            // Use { replace: true } to prevent going back to signup after entry
+            // Secure redirect with history replacement
             navigate("/dashboard", { replace: true });
         } catch (error) {
             console.error("INITIALIZATION_FAILURE:", error.message);
@@ -105,19 +115,15 @@ const SignupPage = () => {
         }
     };
 
-    // While checking auth state, return null to avoid the signup flicker
-    if (authLoading) return null;
-
     return (
         <div className="h-screen flex flex-col bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-hidden">
-
             <nav className="shrink-0 w-full z-[100] bg-black/95 backdrop-blur-xl py-8 border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative">
+                <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative text-white font-bold">
                     <MobileMenuToggle side="left" />
-                    <div className="flex-1 md:flex-none flex justify-center md:justify-start">
+                    <div className="flex-1 md:flex-none flex justify-center md:justify-start text-white font-bold">
                         <BrandLogo />
                     </div>
-                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase font-black">
+                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase font-black text-white">
                         <Link to="/" className="hover:text-[#ccff00] transition-colors tracking-widest uppercase text-white font-bold relative group/link">
                             Home
                             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all"></span>
@@ -132,7 +138,7 @@ const SignupPage = () => {
                 </div>
             </nav>
 
-            <main className="flex-grow flex items-center justify-center px-4 relative z-10 overflow-hidden">
+            <main className="flex-grow flex items-center justify-center px-4 relative z-10 overflow-hidden text-white font-bold">
                 <div className="max-w-xl w-full">
                     <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 md:p-10 rounded-[32px] relative overflow-hidden shadow-2xl">
                         <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/20 to-transparent scan-line"></div>
@@ -145,7 +151,6 @@ const SignupPage = () => {
                                 </span>
                             </div>
                             <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1">Initialize.</h1>
-                            <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase text-balance">Complete all biometric fields to establish your terminal presence.</p>
                         </div>
 
                         <form className="space-y-4" onSubmit={handleSignup}>
@@ -192,18 +197,15 @@ const SignupPage = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5 group">
                                     <span className="text-[8px] font-black uppercase text-white/40 group-focus-within:text-[#ccff00]">[ 4_DIGIT_KEY ]</span>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#ccff00]" size={14} />
-                                        <input
-                                            type="password"
-                                            inputMode="numeric"
-                                            required
-                                            value={formData.code}
-                                            onChange={(e) => handleCodeChange(e, 'code')}
-                                            placeholder="0000"
-                                            className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 pl-10 pr-4 text-white font-bold text-[11px] placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all"
-                                        />
-                                    </div>
+                                    <input
+                                        type="password"
+                                        inputMode="numeric"
+                                        required
+                                        value={formData.code}
+                                        onChange={(e) => handleCodeChange(e, 'code')}
+                                        placeholder="0000"
+                                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3.5 px-4 text-white font-bold text-[11px] placeholder:text-white/40 focus:border-[#ccff00]/40 outline-none transition-all"
+                                    />
                                 </div>
                                 <div className="space-y-1.5 group">
                                     <span className={`text-[8px] font-black uppercase transition-colors ${codesMatch ? 'text-[#ccff00]' : 'text-white/40'}`}>[ VERIFY_KEY ]</span>
@@ -231,26 +233,15 @@ const SignupPage = () => {
                             </button>
 
                             <SocialLogin type="signup" />
-
                         </form>
 
-                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center text-balance">
+                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center text-balance font-bold text-white">
                             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Existing Recruit?</p>
                             <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link font-bold">
                                 Secure Login Entry
                                 <ArrowRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
                             </Link>
                         </div>
-                    </div>
-
-                    <div className="mt-6 flex justify-between items-center px-4 opacity-40">
-                        <div className="flex items-center gap-2">
-                            <Cpu size={10} className="text-[#ccff00] animate-pulse" />
-                            <span className="text-[7px] font-mono text-white uppercase tracking-widest">
-                                Auth Protocol: {status === 'PROCESSING' ? 'UPLOADING' : 'READY'}
-                            </span>
-                        </div>
-                        <span className="text-[7px] font-mono text-white uppercase tracking-widest font-bold">Ver: AJX.RECRUIT.22</span>
                     </div>
                 </div>
             </main>

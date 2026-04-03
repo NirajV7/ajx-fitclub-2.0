@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
-// Added useAuthState for real-time session guarding
+// useAuthState is critical for our Double Guard protocol
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
@@ -12,12 +12,12 @@ import SocialLogin from "./SocialLogin.jsx";
 const BrandLogo = () => (
     <Link to="/" className="flex flex-row md:flex-col items-center md:items-start group cursor-pointer select-none md:gap-0 gap-1">
         <div className="relative">
-            <span className="text-lg md:text-2xl font-black italic tracking-tighter text-white leading-none block transition-all duration-500 group-hover:tracking-normal">
+            <span className="text-lg md:text-2xl font-black italic tracking-tighter text-white leading-none block transition-all duration-500 group-hover:tracking-normal font-bold">
                 AJX
             </span>
             <div className="absolute -bottom-0.5 left-0 h-[1.5px] w-0 bg-[#ccff00] group-hover:w-full transition-all duration-500 shadow-[0_0_8px_rgba(204,255,0,0.5)] hidden md:block"></div>
         </div>
-        <span className="text-lg md:text-[7px] font-black italic md:not-italic tracking-tighter md:tracking-[0.2em] uppercase text-[#ccff00] leading-none md:mt-0.5 md:self-stretch md:text-center md:border-t md:border-white/10 md:pt-0.5 opacity-100 md:opacity-80 group-hover:opacity-100 transition-all">
+        <span className="text-lg md:text-[7px] font-black italic md:not-italic tracking-tighter md:tracking-[0.2em] uppercase text-[#ccff00] leading-none md:mt-0.5 md:self-stretch md:text-center md:border-t md:border-white/10 md:pt-0.5 opacity-100 md:opacity-80 group-hover:opacity-100 transition-all font-bold">
             FITCLUB
         </span>
     </Link>
@@ -35,7 +35,7 @@ const MobileMenuToggle = ({ side }) => (
 );
 
 const SigninPage = () => {
-    // Auth Guard: Identify if a session is already active
+    // Sensor: Detect if an active session exists
     const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
 
@@ -43,9 +43,9 @@ const SigninPage = () => {
         email: '',
         code: ''
     });
-    const [status, setStatus] = useState('IDLE'); // IDLE, AUTHENTICATING, ERROR
+    const [status, setStatus] = useState('IDLE');
 
-    // AUTO-REDIRECT: If a member is already authorized, bypass the login screen
+    // AUTO-BYPASS: If a member is already authorized, overwrite history and skip this page
     useEffect(() => {
         if (user && !authLoading) {
             navigate("/dashboard", { replace: true });
@@ -70,7 +70,6 @@ const SigninPage = () => {
         setStatus('AUTHENTICATING');
 
         try {
-            // Tactical Bypass: Firebase requires 6 chars, prefixing the 4-digit key
             const tacticalPassword = `AJX-${formData.code}`;
             await signInWithEmailAndPassword(auth, formData.email, tacticalPassword);
 
@@ -85,19 +84,28 @@ const SigninPage = () => {
         }
     };
 
-    // While checking authentication state, return null to eliminate flicker
-    if (authLoading) return null;
+    // DOUBLE GUARD: If loading OR user detected, render a tactical loader instead of the form
+    if (authLoading || user) {
+        return (
+            <div className="h-screen bg-black flex flex-col items-center justify-center">
+                <Cpu size={24} className="text-[#ccff00] animate-spin mb-4" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 animate-pulse">
+                    Authorizing Terminal...
+                </span>
+            </div>
+        );
+    }
 
     return (
         <div className="h-screen flex flex-col bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-hidden">
 
             <nav className="shrink-0 w-full z-[100] bg-black/95 backdrop-blur-xl py-8 border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative">
+                <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative font-bold text-white">
                     <MobileMenuToggle side="left" />
-                    <div className="flex-1 md:flex-none flex justify-center md:justify-start">
+                    <div className="flex-1 md:flex-none flex justify-center md:justify-start font-bold text-white">
                         <BrandLogo />
                     </div>
-                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase font-black">
+                    <div className="hidden md:flex items-center space-x-12 text-[10px] font-bold tracking-[0.3em] uppercase font-black font-bold text-white">
                         <Link to="/" className="hover:text-[#ccff00] transition-colors tracking-widest text-white font-bold relative group/link uppercase">
                             Home
                             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all font-bold"></span>
@@ -110,7 +118,7 @@ const SigninPage = () => {
                 </div>
             </nav>
 
-            <main className="flex-grow flex items-center justify-center px-4 relative z-10 overflow-hidden">
+            <main className="flex-grow flex items-center justify-center px-4 relative z-10 overflow-hidden font-bold text-white">
                 <div className="max-w-xl w-full">
                     <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 md:p-10 rounded-[32px] relative overflow-hidden shadow-2xl">
                         <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/20 to-transparent scan-line"></div>
@@ -175,12 +183,12 @@ const SigninPage = () => {
 
                             <SocialLogin type="login" />
 
-                            <div className="flex flex-col items-center gap-6 mt-4 font-bold">
+                            <div className="flex flex-col items-center gap-6 mt-4 font-bold text-white">
                                 <button type="button" className="text-[9px] font-bold uppercase tracking-widest text-white/30 hover:text-white transition-colors underline-offset-4 hover:underline">
                                     Forgot Security Key?
                                 </button>
 
-                                <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center">
+                                <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center font-bold text-white">
                                     <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Not yet recognized?</p>
                                     <Link to="/signup" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link font-bold">
                                         Initialize Profile
@@ -191,7 +199,7 @@ const SigninPage = () => {
                         </form>
                     </div>
 
-                    <div className="mt-8 flex justify-between items-center px-4 opacity-40">
+                    <div className="mt-8 flex justify-between items-center px-4 opacity-40 font-bold text-white">
                         <div className="flex items-center gap-2">
                             <Cpu size={10} className="text-[#ccff00] animate-pulse" />
                             <span className="text-[7px] font-mono text-white uppercase tracking-widest">
