@@ -9,16 +9,25 @@ const SocialLogin = ({ type }) => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false); // New loading state
 
+    // Updated useEffect for mobile persistence
     useEffect(() => {
-        const handleRedirectResult = async () => {
-            setIsLoading(true); // Start loading immediately
+        const handleAuthState = async () => {
+            setIsLoading(true);
             try {
+                // 1. Check if we just came back from a redirect
                 const result = await getRedirectResult(auth);
-                if (result) {
-                    const user = result.user;
+                let user = result?.user;
+
+                // 2. Mobile fallback: If result is null, check if auth already updated the user
+                if (!user && auth.currentUser) {
+                    user = auth.currentUser;
+                }
+
+                if (user) {
                     const userRef = doc(db, "users", user.uid);
                     const userSnap = await getDoc(userRef);
 
+                    // Only create the record if it doesn't exist
                     if (!userSnap.exists()) {
                         await setDoc(userRef, {
                             firstName: user.displayName?.split(' ')[0].toUpperCase() || 'RECRUIT',
@@ -26,20 +35,21 @@ const SocialLogin = ({ type }) => {
                             email: user.email.toLowerCase(),
                             tier: 'RECRUIT',
                             createdAt: new Date(),
-                            status: 'PENDING_ACTIVATION'
+                            status: 'PENDING_ACTIVATION',
+                            authMethod: 'GOOGLE'
                         });
                     }
-                    // CRITICAL: Use { replace: true } to remove Signup from history
+                    // Clean history for a smooth mobile "Back" experience
                     navigate("/dashboard", { replace: true });
-                } else {
-                    setIsLoading(false); // No redirect result, stop loading
                 }
             } catch (error) {
-                console.error("REDIRECT_FAILURE:", error.message);
+                console.error("MOBILE_AUTH_ERROR:", error.code, error.message);
+            } finally {
                 setIsLoading(false);
             }
         };
-        handleRedirectResult();
+
+        handleAuthState();
     }, [navigate]);
 
     if (isLoading) {

@@ -6,7 +6,7 @@ import { getFirestore } from "firebase/firestore";
 // Find this in: Firebase Console > Project Settings > General > Your Apps
 const firebaseConfig = {
     apiKey: "AIzaSyAngn0IiJsNyEg4YH-1bC3LZow4PH-dnyk",
-    authDomain: "ajxfitclub.firebaseapp.com",
+    authDomain: "ajxfitclub.com",
     projectId: "ajxfitclub",
     storageBucket: "ajxfitclub.firebasestorage.app",
     messagingSenderId: "1049126756107",
