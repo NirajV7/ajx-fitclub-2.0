@@ -283,12 +283,14 @@ const LandingPage = () => {
                     </p>
 
                     {/* --- FIXED START TRANSFORMATION BUTTON: RE-ALIGNED ARROW & INITIAL WHITE COLOR --- */}
+                    <Link to="/signup">
                     <button className="group relative flex items-center justify-center gap-3 px-10 py-6 bg-white hover:bg-[#ccff00] text-black font-black uppercase tracking-[0.2em] text-[12px] rounded-full transition-all duration-500 hover:scale-105 active:scale-95 shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_40px_rgba(204,255,0,0.3)] mx-auto">
                         <span className="relative z-10">Start Transformation</span>
                         <div className="w-6 h-6 flex items-center justify-center bg-black/5 rounded-full group-hover:translate-x-1 transition-transform duration-300">
                             <ArrowRight className="w-4 h-4" />
                         </div>
                     </button>
+                    </Link>
                 </div>
 
                 {/* --- LIVING ELEMENT: SYSTEM TICKER --- */}

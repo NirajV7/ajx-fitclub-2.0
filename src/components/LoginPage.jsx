@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, Cpu, ShieldCheck, Check } from 'lucide-react';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
+import SocialLogin from "./SocialLogin.jsx";
 
 // --- SHARED VISUAL COMPONENTS ---
 
@@ -30,19 +33,41 @@ const MobileMenuToggle = ({ side }) => (
 );
 
 const SigninPage = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         code: ''
     });
+    const [status, setStatus] = useState('IDLE'); // IDLE, AUTHENTICATING, ERROR
 
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
     const isCodeComplete = formData.code.length === 4;
-    const isAuthReady = isEmailValid && isCodeComplete;
+    const isAuthReady = isEmailValid && isCodeComplete && status !== 'AUTHENTICATING';
 
     const handleCodeChange = (e) => {
         const value = e.target.value.replace(/[^0-9]/g, '');
         if (value.length <= 4) {
             setFormData({ ...formData, code: value });
+        }
+    };
+
+    const handleAuth = async (e) => {
+        e.preventDefault();
+        if (!isAuthReady) return;
+
+        setStatus('AUTHENTICATING');
+
+        try {
+            // Tactical Bypass: Firebase requires 6 chars, so we prefix your 4-digit key
+            const tacticalPassword = `AJX-${formData.code}`;
+            await signInWithEmailAndPassword(auth, formData.email, tacticalPassword);
+
+            console.log("PROTOCOL_SUCCESS: Member Authorized");
+            navigate("/dashboard");
+        } catch (error) {
+            console.error("AUTH_FAILURE:", error.message);
+            setStatus('ERROR');
+            setTimeout(() => setStatus('IDLE'), 3000); // Reset error state after 3s
         }
     };
 
@@ -75,19 +100,28 @@ const SigninPage = () => {
 
                         <div className="mb-8 text-center">
                             <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#ccff00]/30 rounded-full bg-[#ccff00]/5 mb-4">
-                                <ShieldCheck size={12} className="text-[#ccff00]" />
-                                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-[#ccff00]">Security Protocol Active</span>
+                                <ShieldCheck size={12} className={status === 'ERROR' ? 'text-red-500' : 'text-[#ccff00]'} />
+                                <span className={`text-[8px] font-black uppercase tracking-[0.3em] ${status === 'ERROR' ? 'text-red-500' : 'text-[#ccff00]'}`}>
+                                    {status === 'ERROR' ? 'Access Denied: Invalid Key' : 'Security Protocol Active'}
+                                </span>
                             </div>
                             <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white mb-1">Authenticate.</h1>
                             <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase leading-relaxed">Enter your credentials to access the terminal</p>
                         </div>
 
-                        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                        <form className="space-y-6" onSubmit={handleAuth}>
                             <div className="space-y-2 group">
                                 <span className="text-[8px] font-black uppercase text-white/40 group-focus-within:text-[#ccff00] transition-colors">[ BIOMETRIC_ID ]</span>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#ccff00]" size={16} />
-                                    <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="ALEX.DOE@GMAIL.COM" className={`w-full bg-white/[0.05] border rounded-xl py-4 pl-12 pr-4 text-white font-bold text-[11px] uppercase placeholder:text-white/20 focus:border-[#ccff00]/40 outline-none transition-all ${formData.email.length > 0 && !isEmailValid ? 'border-red-500/30' : 'border-white/10'}`} />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        placeholder="ALEX.DOE@GMAIL.COM"
+                                        className={`w-full bg-white/[0.05] border rounded-xl py-4 pl-12 pr-4 text-white font-bold text-[11px] uppercase placeholder:text-white/20 focus:border-[#ccff00]/40 outline-none transition-all ${formData.email.length > 0 && !isEmailValid ? 'border-red-500/30' : 'border-white/10'}`}
+                                    />
                                 </div>
                             </div>
 
@@ -98,22 +132,38 @@ const SigninPage = () => {
                                 </div>
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#ccff00]" size={16} />
-                                    <input type="password" inputMode="numeric" value={formData.code} onChange={handleCodeChange} placeholder="0000" className={`w-full bg-white/[0.05] border rounded-xl py-4 pl-12 pr-4 text-white font-bold text-[13px] tracking-[0.5em] placeholder:text-white/20 focus:border-[#ccff00]/40 outline-none transition-all ${isCodeComplete ? 'border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.1)]' : 'border-white/10'}`} />
+                                    <input
+                                        type="password"
+                                        inputMode="numeric"
+                                        required
+                                        value={formData.code}
+                                        onChange={handleCodeChange}
+                                        placeholder="0000"
+                                        className={`w-full bg-white/[0.05] border rounded-xl py-4 pl-12 pr-4 text-white font-bold text-[13px] tracking-[0.5em] placeholder:text-white/20 focus:border-[#ccff00]/40 outline-none transition-all ${isCodeComplete ? 'border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.1)]' : 'border-white/10'}`}
+                                    />
                                     {isCodeComplete && <Check className="absolute right-4 top-1/2 -translate-y-1/2 text-[#ccff00]" size={16} />}
                                 </div>
                             </div>
 
-                            <button disabled={!isAuthReady} className={`group relative w-full flex items-center justify-center gap-3 py-5 font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isAuthReady ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}>
-                                <span className="relative z-10">{isAuthReady ? 'Access Portal' : 'Awaiting Auth'}</span>
+                            <button
+                                type="submit"
+                                disabled={!isAuthReady}
+                                className={`group relative w-full flex items-center justify-center gap-3 py-5 font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl transition-all duration-700 overflow-hidden shadow-2xl active:scale-[0.98] ${isAuthReady ? 'bg-white text-black hover:bg-[#ccff00]' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
+                            >
+                                <span className="relative z-10">
+                                    {status === 'AUTHENTICATING' ? 'Verifying...' : (isAuthReady ? 'Access Portal' : 'Awaiting Auth')}
+                                </span>
                                 <ArrowRight className={`relative z-10 w-4 h-4 transition-transform ${isAuthReady ? 'group-hover:translate-x-1' : 'opacity-20'}`} />
                             </button>
 
+                            {/* --- FEDERATED IDENTITY --- */}
+                            <SocialLogin type="login" />
+
                             <div className="flex flex-col items-center gap-6 mt-4">
-                                <button className="text-[9px] font-bold uppercase tracking-widest text-white/30 hover:text-white transition-colors underline-offset-4 hover:underline">
+                                <button type="button" className="text-[9px] font-bold uppercase tracking-widest text-white/30 hover:text-white transition-colors underline-offset-4 hover:underline">
                                     Forgot Security Key?
                                 </button>
 
-                                {/* --- MOBILE CROSS-LINK ADDED HERE --- */}
                                 <div className="w-full pt-6 border-t border-white/5 flex flex-col items-center">
                                     <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-3 italic">Not yet recognized?</p>
                                     <Link to="/signup" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ccff00] hover:text-white transition-all flex items-center gap-2 group/link">
@@ -128,7 +178,9 @@ const SigninPage = () => {
                     <div className="mt-8 flex justify-between items-center px-4 opacity-40">
                         <div className="flex items-center gap-2">
                             <Cpu size={10} className="text-[#ccff00] animate-pulse" />
-                            <span className="text-[7px] font-mono text-white uppercase tracking-widest">Connection: {isAuthReady ? 'STABLE' : 'SECURE'}</span>
+                            <span className="text-[7px] font-mono text-white uppercase tracking-widest">
+                                Connection: {status === 'AUTHENTICATING' ? 'SYNCING' : 'SECURE'}
+                            </span>
                         </div>
                         <span className="text-[7px] font-mono text-white uppercase tracking-widest">Terminal: AJX.SIG.04</span>
                     </div>
