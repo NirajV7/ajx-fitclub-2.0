@@ -1,42 +1,50 @@
-import React from 'react';
-import { signInWithPopup } from "firebase/auth";
-// Added Firestore imports to initialize the user profile
+import React, { useEffect } from 'react';
+// Import signInWithRedirect and getRedirectResult
+import { signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider, db } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { LogIn } from 'lucide-react';
+import { LogIn, Cpu } from 'lucide-react';
 
 const SocialLogin = ({ type }) => {
     const navigate = useNavigate();
 
+    // Handle the redirect result when the user returns to the page
+    useEffect(() => {
+        const handleRedirectResult = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    const user = result.user;
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
+
+                    if (!userSnap.exists()) {
+                        await setDoc(userRef, {
+                            firstName: user.displayName?.split(' ')[0].toUpperCase() || 'RECRUIT',
+                            lastName: user.displayName?.split(' ')[1]?.toUpperCase() || 'OPERATIVE',
+                            email: user.email.toLowerCase(),
+                            tier: 'RECRUIT',
+                            createdAt: new Date(),
+                            status: 'PENDING_ACTIVATION',
+                            authMethod: 'GOOGLE'
+                        });
+                    }
+                    navigate("/dashboard");
+                }
+            } catch (error) {
+                console.error("REDIRECT_RESULT_FAILURE:", error.message);
+            }
+        };
+        handleRedirectResult();
+    }, [navigate]);
+
     const handleGoogleAction = async () => {
         try {
-            // Standard Firebase Pop-up
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
-
-            // STRATEGY 3 INITIALIZATION: Check if profile exists, if not, create as RECRUIT
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-                await setDoc(userRef, {
-                    firstName: user.displayName?.split(' ')[0].toUpperCase() || 'RECRUIT',
-                    lastName: user.displayName?.split(' ')[1]?.toUpperCase() || 'OPERATIVE',
-                    email: user.email.toLowerCase(),
-                    tier: 'RECRUIT', // This triggers the locked state
-                    createdAt: new Date(),
-                    status: 'PENDING_ACTIVATION',
-                    authMethod: 'GOOGLE'
-                });
-                console.log("GOOGLE_INITIALIZATION: Profile Created as RECRUIT");
-            }
-
-            // REDIRECT: Go to dashboard to show the "Locked" state or Active data
-            navigate("/dashboard");
-
+            // Switch from Pop-up to Redirect to bypass browser blockers
+            await signInWithRedirect(auth, googleProvider);
         } catch (error) {
-            console.error("Auth Protocol Failure:", error.message);
+            console.error("AUTH_INITIALIZATION_FAILURE:", error.message);
         }
     };
 
