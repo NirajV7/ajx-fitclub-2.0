@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Cpu, ArrowRight } from 'lucide-react';
-// Firebase Firestore imports
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+// Updated Firebase imports to include setDoc for profile promotion
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db, auth } from "../firebase";
 
 const VerifyKey = () => {
     const [code, setCode] = useState(['', '', '', '']);
-    const [status, setStatus] = useState('AWAITING_INPUT'); // IDLE, VERIFYING, SUCCESS, ERROR
+    const [status, setStatus] = useState('AWAITING_INPUT');
     const navigate = useNavigate();
 
     const handleChange = (index, value) => {
@@ -16,7 +16,6 @@ const VerifyKey = () => {
         newCode[index] = value.substring(value.length - 1);
         setCode(newCode);
 
-        // Auto-focus next input field for elite UX
         if (value && index < 3) {
             const nextInput = document.getElementById(`code-${index + 1}`);
             if (nextInput) nextInput.focus();
@@ -28,21 +27,30 @@ const VerifyKey = () => {
         setStatus('VERIFYING');
 
         try {
-            // Direct tactical query to the 'keys' collection in Firestore
+            // Query the global 'keys' collection for the activation code
             const docRef = doc(db, "keys", finalCode);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
 
-                // Check if the specific recruitment key is currently active
                 if (data.isActive) {
                     setStatus('SUCCESS');
 
-                    // Store membership tier (e.g., 'inhouse') locally for the Dashboard
+                    // CRITICAL: Promote the current user's profile in the 'users' collection
+                    // This allows the Dashboard's onSnapshot listener to trigger the unlock
+                    if (auth.currentUser) {
+                        await setDoc(doc(db, "users", auth.currentUser.uid), {
+                            tier: data.tier || 'INHOUSE',
+                            activatedAt: new Date(),
+                            activationCode: finalCode,
+                            status: 'ACTIVE'
+                        }, { merge: true });
+                    }
+
+                    // Redundant backup for offline-first speed
                     localStorage.setItem('memberTier', data.tier || 'recruit');
 
-                    // Proceed to the inner sanctum
                     setTimeout(() => navigate('/dashboard'), 1000);
                 } else {
                     throw new Error("KEY_DEACTIVATED");
@@ -54,7 +62,6 @@ const VerifyKey = () => {
             console.error("TERMINAL_ACCESS_DENIED:", error.message);
             setStatus('ERROR');
 
-            // Auto-reset the terminal for a second attempt after 2 seconds
             setTimeout(() => {
                 setCode(['', '', '', '']);
                 setStatus('AWAITING_INPUT');
@@ -67,19 +74,19 @@ const VerifyKey = () => {
     return (
         <div className="h-screen bg-black text-white flex flex-col items-center justify-center font-sans antialiased selection:bg-[#ccff00] selection:text-black">
             <div className="max-w-md w-full p-8 bg-white/[0.02] border border-white/10 rounded-[32px] backdrop-blur-3xl relative overflow-hidden shadow-2xl">
-                {/* Tactical Scan Line Animation */}
+                {/* Tactical HUD Scan Line */}
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/40 to-transparent animate-pulse"></div>
 
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#ccff00]/20 rounded-full bg-[#ccff00]/5 mb-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#ccff00]/30 rounded-full bg-[#ccff00]/5 mb-6">
                         <ShieldCheck size={12} className={status === 'ERROR' ? 'text-red-500' : 'text-[#ccff00]'} />
                         <span className={`text-[8px] font-black uppercase tracking-[0.3em] ${status === 'ERROR' ? 'text-red-500' : 'text-[#ccff00]'}`}>
                             {status === 'ERROR' ? 'Authorization Failed' : 'Final Authorization'}
                         </span>
                     </div>
                     <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Enter Tactical Key</h2>
-                    <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase leading-relaxed">
-                        Input the 4-digit code provided by AJX HQ
+                    <p className="text-white/40 text-[9px] font-bold tracking-[0.2em] uppercase leading-relaxed text-balance">
+                        Input the 4-digit code provided by AJX HQ to decrypt your protocols.
                     </p>
                 </div>
 
@@ -108,21 +115,20 @@ const VerifyKey = () => {
                     className={`group w-full py-4 rounded-2xl font-black uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 transition-all duration-500 active:scale-95 ${
                         code.includes('')
                             ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-                            : 'bg-[#ccff00] text-black hover:bg-white hover:shadow-[0_0_30px_rgba(204,255,0,0.3)]'
+                            : 'bg-[#ccff00] text-black hover:bg-white hover:shadow-[0_0_30px_rgba(204,255,0,0.3)] shadow-xl'
                     }`}
                 >
-                    <span className="relative z-10">
-                        {status === 'VERIFYING' ? 'Decrypting...' : status === 'ERROR' ? 'Access Denied' : 'Unlock Terminal'}
+                    <span className="relative z-10 font-bold">
+                        {status === 'VERIFYING' ? 'DECRYPTING...' : status === 'ERROR' ? 'ACCESS DENIED' : 'UNLOCK TERMINAL'}
                     </span>
                     <ArrowRight size={14} className={`transition-transform ${!code.includes('') && 'group-hover:translate-x-1'}`} />
                 </button>
             </div>
 
-            {/* System Status Indicator */}
             <div className="mt-8 flex items-center gap-2 opacity-30">
                 <Cpu size={12} className="text-[#ccff00] animate-pulse" />
                 <span className="text-[7px] font-mono tracking-[0.4em] uppercase text-white">
-                    Protocol: {status === 'VERIFYING' ? 'HANDSHAKE_ACTIVE' : 'SECURE_CHANNEL'}
+                    PROTOCOL: {status === 'VERIFYING' ? 'HANDSHAKE_ACTIVE' : 'SECURE_CHANNEL'}
                 </span>
             </div>
         </div>
