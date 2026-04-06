@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import ProtocolSelection from './ProtocolSelection';
 
-// --- UPDATED BRAND LOGO: ZERO GAP & ONE-WORD LOOK ---
 const BrandLogo = () => (
     <div className="flex flex-row items-center select-none">
         <span className="text-lg md:text-2xl font-black italic tracking-tighter text-white leading-none font-bold">
@@ -32,7 +31,6 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [showPayWall, setShowPayWall] = useState(false);
 
-    // Health Profile States
     const [showBioSync, setShowBioSync] = useState(false);
     const [bioData, setBioData] = useState({ gender: '', dob: '', healthIssues: '' });
     const [isSavingBio, setIsSavingBio] = useState(false);
@@ -100,15 +98,12 @@ const Dashboard = () => {
 
     return (
         <div className="min-h-[100dvh] w-full bg-[#080808] text-white font-sans antialiased flex flex-col">
-
-            {/* --- TOP HEADER --- */}
             <header className="shrink-0 bg-black/60 backdrop-blur-3xl border-b border-white/10 z-[100]">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="h-9 w-9 bg-white/[0.05] border border-white/10 rounded-xl flex items-center justify-center text-[#ccff00]">
                             <Shield size={18} />
                         </div>
-                        {/* INTEGRATED BRAND LOGO WITH NO GAP */}
                         <BrandLogo />
                     </div>
                     <button onClick={handleSignOut} className="p-2.5 bg-white/[0.05] border border-white/10 rounded-xl text-white/40 hover:text-red-500 transition-all">
@@ -118,8 +113,6 @@ const Dashboard = () => {
             </header>
 
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8 md:py-12 flex flex-col">
-
-                {/* --- WELCOME SECTION --- */}
                 <div className="mb-10">
                     <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.05]">
                         <div className={`w-1.5 h-1.5 rounded-full ${!isActive ? 'bg-orange-500 animate-pulse' : 'bg-[#ccff00]'}`}></div>
@@ -134,8 +127,6 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-
-                    {/* Health Profile Card */}
                     <div
                         onClick={() => setShowBioSync(true)}
                         className={`group bg-white/[0.03] border rounded-[32px] p-8 transition-all duration-300 cursor-pointer ${isBioComplete ? 'border-white/5' : 'border-[#ccff00]/30 hover:bg-white/[0.05]'}`}
@@ -159,11 +150,9 @@ const Dashboard = () => {
                         )}
                     </div>
 
-                    {/* Training Modules */}
                     <div className="relative rounded-[32px] overflow-hidden bg-white/[0.02] border border-white/5 min-h-[220px] flex flex-col items-center justify-center text-center p-8">
                         <Sparkles size={24} className="text-white/10 mb-4" />
                         <h3 className="text-xl font-bold text-white/20">Training & Nutrition</h3>
-
                         {!isActive && (
                             <div className="absolute inset-0 z-10 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6">
                                 <Lock size={20} className="text-[#ccff00] mb-4" />
@@ -183,10 +172,9 @@ const Dashboard = () => {
 
                 {showPayWall && <ProtocolSelection onClose={() => setShowPayWall(false)} />}
 
-                {/* --- HEALTH PROFILE MODAL --- */}
                 {showBioSync && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
-                        <div className="w-full max-w-md bg-[#0f0f0f] border border-white/10 rounded-[32px] p-8 md:p-10 relative animate-in fade-in zoom-in-95 duration-300">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 bg-black/90 backdrop-blur-xl">
+                        <div className="w-full max-w-md bg-[#0f0f0f] border border-white/10 rounded-[32px] p-6 md:p-10 relative animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide">
                             <button onClick={() => setShowBioSync(false)} className="absolute top-6 right-6 text-white/20 hover:text-white"><X size={20} /></button>
 
                             <div className="text-center mb-8">
@@ -212,12 +200,16 @@ const Dashboard = () => {
 
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 ml-1">Date of Birth</label>
-                                    <input
-                                        type="date" required
-                                        value={bioData.dob}
-                                        onChange={(e) => setBioData({...bioData, dob: e.target.value})}
-                                        className="w-full bg-white/[0.05] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-[#ccff00]/40"
-                                    />
+                                    {/* UI FIX: Added specific mobile date input styling to prevent overflow */}
+                                    <div className="relative group">
+                                        <input
+                                            type="date" required
+                                            value={bioData.dob}
+                                            onChange={(e) => setBioData({...bioData, dob: e.target.value})}
+                                            className="block w-full bg-white/[0.05] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-[#ccff00]/40 appearance-none color-scheme-dark"
+                                            style={{ colorScheme: 'dark' }}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="space-y-3">
