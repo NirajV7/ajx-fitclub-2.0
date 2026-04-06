@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu } from 'lucide-react';
+import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu , ShieldCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 // useAuthState is our primary sensor for session detection on the Home Page
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -475,47 +475,38 @@ const LandingPage = () => {
             <footer id="experience" className="relative pt-32 pb-20 px-8 bg-black overflow-hidden border-t border-white/5 text-white font-bold">
                 <div className="max-w-7xl mx-auto relative z-10">
                     <div className="text-center mb-24">
-                        <span className="text-[10px] font-black tracking-[0.6em] uppercase text-[#ccff00] block mb-8 font-black uppercase tracking-widest text-white">Authorized Entry Only</span>
+                        <span className="text-[10px] font-black tracking-[0.6em] uppercase text-[#ccff00] block mb-8 font-black tracking-widest text-white">Authorized Access Only</span>
                         <h2 className="text-[12vw] lg:text-[10vw] font-black tracking-tighter italic uppercase leading-[0.8] mb-16 opacity-90 transition-all hover:opacity-100 duration-700 font-bold">
                             JOIN THE <br/>
                             <span className="text-[#ccff00]">COLLECTIVE.</span>
                         </h2>
 
-                        <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto px-4">
-                            <div className="flex-1 group relative p-1 bg-white/5 rounded-[32px] overflow-hidden transition-all hover:bg-white/10">
-                                <div className="relative p-8 h-full flex flex-col items-center justify-between border border-white/10 rounded-[30px] bg-black/40 backdrop-blur-xl">
-                                    <div className="mb-6 text-center">
-                                        <User className="w-10 h-10 text-[#ccff00] mb-4 mx-auto opacity-40" />
-                                        <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-2 font-black uppercase tracking-widest font-bold text-white">New Recruit</h3>
-                                        <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Establish your digital presence and start your transformation journey.</p>
-                                    </div>
-                                    <Link to="/signup" className="w-full">
-                                        <button className="w-full py-5 bg-white text-black font-black uppercase tracking-[0.4em] text-[10px] rounded-2xl hover:bg-[#ccff00] active:scale-95 transition-all font-bold">
-                                            Create Profile
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
+                        {/* --- NEW UNIFIED ENTRANCE BLOCK --- */}
+                        <div className="max-w-2xl mx-auto group relative p-[1px] bg-gradient-to-b from-white/10 to-transparent rounded-[48px] overflow-hidden transition-all duration-700 hover:from-[#ccff00]/40">
+                            <div className="relative p-10 md:p-16 h-full flex flex-col items-center justify-center border border-white/5 rounded-[47px] bg-neutral-900/40 backdrop-blur-3xl overflow-hidden">
+                                {/* Interior Scan Line Effect */}
+                                <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/20 to-transparent scan-line opacity-40"></div>
 
-                            <div className="flex-1 group relative p-1 bg-white/5 rounded-[32px] overflow-hidden transition-all hover:bg-white/10">
-                                <div className="relative p-8 h-full flex flex-col items-center justify-between border border-white/10 rounded-[30px] bg-black/40 backdrop-blur-xl">
-                                    <div className="mb-6 text-center">
-                                        <Lock className="w-10 h-10 text-white mb-4 mx-auto opacity-40" />
-                                        <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-2 font-black uppercase tracking-widest font-bold text-white">Active Member</h3>
-                                        <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Log in to Access your tailored performance dashboard and tracking.</p>
-                                    </div>
-                                    <Link to="/login" className="w-full">
-                                        <button className="w-full py-5 border border-white/20 text-white font-black uppercase tracking-[0.4em] text-[10px] rounded-2xl hover:bg-white hover:text-black active:scale-95 transition-all font-bold">
-                                            Secure Log In
-                                        </button>
-                                    </Link>
-                                </div>
+                                <ShieldCheck size={48} className="text-[#ccff00] mb-8 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+
+                                <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter mb-4 text-white">The AJX Terminal</h3>
+                                <p className="text-white/40 text-[11px] md:text-xs uppercase font-bold tracking-widest leading-relaxed mb-10 max-w-sm mx-auto">
+                                    One portal for all members. Access your training protocols, track your biometrics, or start your recruitment process.
+                                </p>
+
+                                <Link to="/login" className="w-full max-w-xs">
+                                    <button className="group/btn w-full py-5 bg-white text-black font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl hover:bg-[#ccff00] active:scale-95 transition-all duration-500 shadow-2xl flex items-center justify-center gap-3">
+                                        <span>ENTER THE PORTAL</span>
+                                        <ArrowRight size={16} className="group-hover/btn:translate-x-2 transition-transform" />
+                                    </button>
+                                </Link>
                             </div>
                         </div>
 
-                        <p className="mt-16 text-white/30 font-medium tracking-[0.3em] text-[10px] uppercase italic">Encrypted Connection • Elite Access Portal</p>
+                        <p className="mt-16 text-white/30 font-medium tracking-[0.3em] text-[10px] uppercase italic">Secure Handshake Protocol • Encrypted Member Entry</p>
                     </div>
 
+                    {/* --- FOOTER LOGO & SOCIALS --- */}
                     <div className="flex flex-col md:flex-row justify-between items-center gap-12 pt-16 border-t border-white/5 uppercase relative">
                         <div className="flex-1 md:flex-none flex justify-center md:justify-start">
                             <BrandLogo onClick={scrollToTop} />
