@@ -4,7 +4,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "../firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { ArrowRight, Phone, User, ShieldCheck, ChevronRight, ChevronLeft, Check, Activity } from 'lucide-react';
+import { ArrowRight, User, ShieldCheck, ChevronRight, ChevronLeft, Check, Activity } from 'lucide-react';
 import SocialLogin from "./SocialLogin.jsx";
 
 const AuthGate = () => {
@@ -12,7 +12,7 @@ const AuthGate = () => {
     const [user, authLoading] = useAuthState(auth);
 
     const [step, setStep] = useState(1);
-    const [status, setStatus] = useState('IDLE'); // States: IDLE, PROCESSING, OTP_SENT, VERIFYING, ERROR
+    const [status, setStatus] = useState('IDLE');
     const [countryCode, setCountryCode] = useState('+91');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otp, setOtp] = useState('');
@@ -123,7 +123,6 @@ const AuthGate = () => {
                         {step === 1 ? (
                             <div className="space-y-6">
                                 <form onSubmit={status === 'OTP_SENT' ? handleVerifyOTP : handleSendOTP} className="space-y-4">
-                                    {/* PHONE INPUT: Hidden when code is sent for better UX */}
                                     {status !== 'OTP_SENT' && status !== 'VERIFYING' ? (
                                         <div className="flex gap-2 h-14">
                                             <div className="w-16 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">+91</div>
@@ -136,7 +135,6 @@ const AuthGate = () => {
                                             />
                                         </div>
                                     ) : (
-                                        /* OTP INPUT: Visible only after successful request */
                                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                             <div className="flex flex-col items-center justify-center text-center">
                                                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ccff00] mb-1">Code sent to {phoneNumber}</span>
@@ -148,13 +146,14 @@ const AuthGate = () => {
                                                     Change Number
                                                 </button>
                                             </div>
+                                            {/* OTP INPUT: Updated with shorter placeholder and white text */}
                                             <input
                                                 type="text"
                                                 maxLength="6"
-                                                placeholder="Enter 6-digit OTP"
+                                                placeholder="000000"
                                                 value={otp}
                                                 onChange={(e) => setOtp(e.target.value)}
-                                                className="w-full h-14 bg-white/[0.08] border border-[#ccff00]/40 rounded-2xl px-6 text-[#ccff00] text-center font-black tracking-[0.6em] outline-none text-xl"
+                                                className="w-full h-14 bg-white/[0.08] border border-[#ccff00]/40 rounded-2xl px-4 text-white text-center font-black tracking-[0.4em] md:tracking-[0.6em] outline-none text-xl placeholder:text-white/10"
                                             />
                                         </div>
                                     )}
@@ -177,7 +176,6 @@ const AuthGate = () => {
                                 <SocialLogin type="login" onAuthSuccess={(user) => checkUserStatus(user)} />
                             </div>
                         ) : (
-                            /* PROFILE INITIALIZATION STEP */
                             <div className="space-y-5">
                                 <div className="relative h-14">
                                     <User className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
