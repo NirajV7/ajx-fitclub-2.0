@@ -415,7 +415,8 @@ const LandingPage = () => {
                                     <a href="https://wa.me/917736720936" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
                                         <MessageCircle size={22} />
                                     </a>
-                                    <a href="#" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
+                                    {/* UPDATED: Personal Instagram Link for Coach card */}
+                                    <a href="https://www.instagram.com/athul_muralidharan_?igsh=MW9haDB2M25tMm52Mw==" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
                                         <InstagramIcon size={22} />
                                     </a>
                                     <a href="tel:+917736720936" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
@@ -496,15 +497,19 @@ const LandingPage = () => {
                             <BrandLogo onClick={scrollToTop} />
                         </div>
                         <div className="flex gap-10">
-                            <a href="#" className="p-3 rounded-full border border-white/5 hover:border-[#ccff00] hover:text-[#ccff00] transition-all">
+                            {/* UPDATED: Official Business Instagram Link for Footer */}
+                            <a href="https://www.instagram.com/ajxfitclub?igsh=MXVpaGVzbWpnbzhkaw==" className="p-3 rounded-full border border-white/5 hover:border-[#ccff00] hover:text-[#ccff00] transition-all">
                                 <InstagramIcon size={18} />
                             </a>
                             <a href="https://wa.me/917736720936" className="p-3 rounded-full border border-white/5 hover:border-[#ccff00] hover:text-[#ccff00] transition-all">
                                 <MessageCircle size={18} />
                             </a>
                         </div>
-                        <div className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-30 text-center md:text-right">
-                            © 2024 AJXFITCLUB LLP • All Rights Reserved<br/>Designed for Elite Performance
+                        {/* UPDATED: Footer Attribution with clear visibility and custom styled Njx */}
+                        <div className="text-[10px] font-bold tracking-[0.3em] uppercase text-center md:text-right font-mono">
+                            <span className="opacity-30">© 2024 AJXFITCLUB LLP • All Rights Reserved</span><br/>
+                            <span className="opacity-30">Designed for Elite Performance</span><br/>
+                            <span className="opacity-80">Website created and managed by</span> <span className="text-[#ccff00] opacity-100 font-black">Njx</span>
                         </div>
                     </div>
                 </div>
@@ -546,7 +551,7 @@ const LandingPage = () => {
                     <div className="relative z-10 flex flex-col gap-8 items-center border-t border-white/10 pt-12">
                         <div className="flex gap-12">
                             <a href="https://wa.me/917736720936" className="text-white hover:text-[#ccff00] transition-all"><MessageCircle size={28} /></a>
-                            <a href="#" className="text-white hover:text-[#ccff00] transition-all"><InstagramIcon size={28} /></a>
+                            <a href="https://www.instagram.com/ajxfitclub?igsh=MXVpaGVzbWpnbzhkaw==" className="text-white hover:text-[#ccff00] transition-all"><InstagramIcon size={28} /></a>
                             <a href="tel:+917736720936" className="text-white hover:text-[#ccff00] transition-all"><Phone size={28} /></a>
                         </div>
                         <div className="text-[8px] font-black tracking-[0.6em] uppercase text-white/30 italic">
