@@ -51,8 +51,6 @@ const AuthGate = () => {
 
     const handleSendOTP = async (e) => {
         e?.preventDefault();
-
-        // 1. Strict Validation: Prevent "Invalid Number" error
         if (phoneNumber.length !== 10 || !/^\d+$/.test(phoneNumber)) {
             setErrorMessage('Enter a valid 10-digit number');
             return;
@@ -65,7 +63,6 @@ const AuthGate = () => {
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
         try {
-            // 2. Check existence for UI feedback (Note: OTP is still required by Firebase for Login)
             const q = query(collection(db, "users"), where("phoneNumber", "==", fullPhoneNumber));
             const querySnapshot = await getDocs(q);
             const userExists = !querySnapshot.empty;
@@ -77,9 +74,7 @@ const AuthGate = () => {
             if (userExists) setErrorMessage('Welcome back. Verifying identity...');
         } catch (error) {
             console.error("AUTH_ERROR:", error.code);
-            setStatus('IDLE'); // Reset circling button
-
-            // 3. Handle specific Firebase Errors
+            setStatus('IDLE');
             if (error.code === 'auth/too-many-requests') {
                 setErrorMessage('SMS limit reached. Please try again in a few hours.');
             } else if (error.code === 'auth/invalid-phone-number') {
@@ -87,8 +82,6 @@ const AuthGate = () => {
             } else {
                 setErrorMessage('Connection failed. Please try again.');
             }
-
-            // Clear Recaptcha to allow immediate retry
             if (window.recaptchaVerifier) {
                 window.recaptchaVerifier.clear();
                 window.recaptchaVerifier = null;
@@ -164,13 +157,14 @@ const AuthGate = () => {
                                     {status !== 'OTP_SENT' && status !== 'VERIFYING' ? (
                                         <div className="flex gap-2 h-14">
                                             <div className="w-14 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">+91</div>
+                                            {/* FIXED: text-base (16px) prevents iOS auto-zoom during typing */}
                                             <input
                                                 type="tel"
                                                 maxLength="10"
                                                 placeholder="10-digit number"
                                                 value={phoneNumber}
                                                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                                                className="flex-1 bg-white/[0.05] border border-white/10 rounded-2xl px-5 text-sm font-medium outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
+                                                className="flex-1 bg-white/[0.05] border border-white/10 rounded-2xl px-5 text-base font-medium outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
                                             />
                                         </div>
                                     ) : (
@@ -201,14 +195,14 @@ const AuthGate = () => {
                                 <SocialLogin type="login" onAuthSuccess={(user) => checkUserStatus(user)} />
                             </div>
                         ) : (
-                            /* PROFILE SETUP SECTION */
                             <div className="space-y-4">
                                 <div className="relative h-12">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={14} />
+                                    {/* FIXED: text-base (16px) prevents iOS auto-zoom during typing */}
                                     <input
                                         type="text"
                                         placeholder="Full Name"
-                                        className="w-full h-full bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 text-sm outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
+                                        className="w-full h-full bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 text-base outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
                                         onChange={(e) => setAssessment({...assessment, firstName: e.target.value})}
                                     />
                                 </div>
