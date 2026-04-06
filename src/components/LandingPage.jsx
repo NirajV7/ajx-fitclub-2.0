@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu , ShieldCheck } from 'lucide-react';
+import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu , ShieldCheck } from 'lucide-center';
 import { Link, useNavigate } from 'react-router-dom';
-// useAuthState is our primary sensor for session detection on the Home Page
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
 
-// Custom Instagram Icon component
 const InstagramIcon = ({ size = 24, className = "" }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -25,8 +23,6 @@ const InstagramIcon = ({ size = 24, className = "" }) => (
     </svg>
 );
 
-// --- REFINED LOGO ---
-// --- REFINED LOGO ---
 const BrandLogo = ({ onClick }) => (
     <div
         onClick={onClick}
@@ -41,7 +37,6 @@ const BrandLogo = ({ onClick }) => (
     </div>
 );
 
-// --- UNIQUE MOBILE MENU TOGGLE: TACTILE MATRIX ---
 const MobileMenuToggle = ({ isOpen, onClick, side }) => (
     <button
         onClick={onClick}
@@ -57,7 +52,6 @@ const MobileMenuToggle = ({ isOpen, onClick, side }) => (
 );
 
 const LandingPage = () => {
-    // Double-Guard: Auth detection for the Reverse Guard protocol
     const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
 
@@ -67,7 +61,6 @@ const LandingPage = () => {
     const [activePlanIndex, setActivePlanIndex] = useState(0);
     const plansRef = useRef(null);
 
-    // REVERSE GUARD: If session is detected, lock the user into the terminal
     useEffect(() => {
         if (user && !authLoading) {
             navigate("/dashboard", { replace: true });
@@ -83,7 +76,6 @@ const LandingPage = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // While checking for session, show a clean black transition
     if (authLoading || user) {
         return (
             <div className="h-screen bg-black flex flex-col items-center justify-center">
@@ -186,7 +178,9 @@ const LandingPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-x-hidden">
+        /* FIXED: touch-pan-y allows vertical scrolling while blocking all mobile zooming and horizontal wobble */
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-x-hidden touch-pan-y select-none">
+
             {/* Background Elements */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 {[...Array(20)].map((_, i) => (
@@ -204,31 +198,31 @@ const LandingPage = () => {
             </div>
 
             <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
-        .scan-line { animation: scan 3s linear infinite; }
-        
-        @keyframes float {
-          0% { transform: translateY(0) translateX(0); opacity: 0; }
-          20% { opacity: 0.2; }
-          80% { opacity: 0.2; }
-          100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
-        }
+                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+                @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+                .scan-line { animation: scan 3s linear infinite; }
+                
+                @keyframes float {
+                  0% { transform: translateY(0) translateX(0); opacity: 0; }
+                  20% { opacity: 0.2; }
+                  80% { opacity: 0.2; }
+                  100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+                }
 
-        @keyframes drift {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(0.5deg); }
-        }
+                @keyframes drift {
+                  0%, 100% { transform: translateY(0px) rotate(0deg); }
+                  50% { transform: translateY(-10px) rotate(0.5deg); }
+                }
 
-        .animate-drift { animation: drift 6s ease-in-out infinite; }
+                .animate-drift { animation: drift 6s ease-in-out infinite; }
 
-        @keyframes ticker {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        .animate-ticker { animation: ticker 20s linear infinite; }
-      `}</style>
+                @keyframes ticker {
+                  0% { transform: translateX(100%); }
+                  100% { transform: translateX(-100%); }
+                }
+                .animate-ticker { animation: ticker 20s linear infinite; }
+            `}</style>
 
             {/* Navigation */}
             <nav className={`fixed w-full z-[100] transition-all duration-700 ${isScrolled ? 'bg-black/95 backdrop-blur-xl py-4 border-b border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]' : 'bg-transparent py-8'}`}>
@@ -479,10 +473,8 @@ const LandingPage = () => {
                             <span className="text-[#ccff00]">COLLECTIVE.</span>
                         </h2>
 
-                        {/* --- NEW UNIFIED ENTRANCE BLOCK --- */}
                         <div className="max-w-2xl mx-auto group relative p-[1px] bg-gradient-to-b from-white/10 to-transparent rounded-[48px] overflow-hidden transition-all duration-700 hover:from-[#ccff00]/40">
                             <div className="relative p-10 md:p-16 h-full flex flex-col items-center justify-center border border-white/5 rounded-[47px] bg-neutral-900/40 backdrop-blur-3xl overflow-hidden">
-                                {/* Interior Scan Line Effect */}
                                 <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/20 to-transparent scan-line opacity-40"></div>
 
                                 <ShieldCheck size={48} className="text-[#ccff00] mb-8 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
@@ -504,7 +496,6 @@ const LandingPage = () => {
                         <p className="mt-16 text-white/30 font-medium tracking-[0.3em] text-[10px] uppercase italic">Secure Handshake Protocol • Encrypted Member Entry</p>
                     </div>
 
-                    {/* --- FOOTER LOGO & SOCIALS --- */}
                     <div className="flex flex-col md:flex-row justify-between items-center gap-12 pt-16 border-t border-white/5 uppercase relative">
                         <div className="flex-1 md:flex-none flex justify-center md:justify-start">
                             <BrandLogo onClick={scrollToTop} />
