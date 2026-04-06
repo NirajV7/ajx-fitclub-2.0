@@ -125,23 +125,6 @@ const LandingPage = () => {
 
     const plans = [
         {
-            name: "IN-HOUSE PERSONAL TRAINING",
-            price: "₹8000",
-            period: "/ Month",
-            subtitle: "Train at home. No gym needed.",
-            icon: <Home className="w-6 h-6" />,
-            buttonText: "BRING THE CLUB HOME",
-            features: [
-                "16 Sessions (4 PT per week)",
-                "2 Guided Recovery / Mobility days",
-                "Equipment brought to your home",
-                "Personalised Nutrition Planning",
-                "WhatsApp support + tracking",
-                "Flexible timings"
-            ],
-            tag: "Limited Slots"
-        },
-        {
             name: "ONLINE MONITORING",
             price: "₹2000",
             period: "/ month",
@@ -174,11 +157,28 @@ const LandingPage = () => {
                 "Flexible session selection"
             ],
             tag: "Standard & Premium"
+        },
+        {
+            name: "IN-HOUSE PERSONAL TRAINING",
+            price: "₹8000",
+            period: "/ Month",
+            subtitle: "Train at home. No gym needed.",
+            icon: <Home className="w-6 h-6" />,
+            buttonText: "BRING THE CLUB HOME",
+            features: [
+                "16 Sessions (4 PT per week)",
+                "2 Guided Recovery / Mobility days",
+                "Equipment brought to your home",
+                "Personalised Nutrition Planning",
+                "WhatsApp support + tracking",
+                "Flexible timings"
+            ],
+            tag: "Limited Slots"
         }
     ];
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-x-hidden">
+        <div className="min-h-screen bg-black text-white font-sans antialiased relative overflow-x-hidden selection:bg-[#ccff00] selection:text-black">
 
             <div className="fixed inset-0 pointer-events-none z-0">
                 {[...Array(20)].map((_, i) => (
@@ -252,6 +252,7 @@ const LandingPage = () => {
                 </div>
             </nav>
 
+            {/* Hero Section */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
                 <div className="absolute inset-0 z-0">
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black z-10" />
@@ -301,6 +302,7 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Pillars Section */}
             <section id="pillars" className="relative pt-24 pb-12 px-8 bg-black">
                 <div className="max-w-7xl mx-auto text-white font-bold">
                     <div className="grid lg:grid-cols-3 gap-px bg-white/10 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
@@ -325,6 +327,7 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Plans Section */}
             <section id="plans" className="py-12 md:py-20 px-6 md:px-8 bg-black text-white font-bold">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-12 md:mb-16">
@@ -335,7 +338,7 @@ const LandingPage = () => {
                     <div
                         ref={plansRef}
                         onScroll={handlePlansScroll}
-                        className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-8 pb-4 lg:pb-0 snap-x snap-mandatory scrollbar-hide"
+                        className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-8 pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide"
                     >
                         {plans.map((plan, index) => (
                             <div
@@ -378,6 +381,16 @@ const LandingPage = () => {
                         ))}
                     </div>
 
+                    {/* SCROLL INDICATOR: Added tactical pagination for mobile swipe awareness */}
+                    <div className="flex lg:hidden justify-center items-center gap-2 mt-4">
+                        {plans.map((_, i) => (
+                            <div
+                                key={i}
+                                className={`h-1 rounded-full transition-all duration-500 ${activePlanIndex === i ? 'w-8 bg-[#ccff00] shadow-[0_0_10px_rgba(204,255,0,0.5)]' : 'w-2 bg-white/10'}`}
+                            />
+                        ))}
+                    </div>
+
                     <div className="p-6 md:p-12 rounded-[40px] border border-white/5 bg-neutral-900/20 group hover:border-[#ccff00]/20 transition-all duration-700 overflow-hidden relative text-white font-bold mt-16">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-[#ccff00]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
 
@@ -402,7 +415,7 @@ const LandingPage = () => {
                                     {["Resp india level 3", "Nsqf level 4", "Human Performance Nutrition"].map((cert) => (
                                         <div key={cert} className="group/cert flex items-center gap-2 px-3 py-2 md:px-5 md:py-3 rounded-xl bg-white/5 border border-white/10 hover:border-[#ccff00]/40 transition-all">
                                             <Award className="w-3 h-3 md:w-4 md:h-4 text-[#ccff00] opacity-70 group-hover/cert:opacity-100" />
-                                            <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest text-white/80 group-hover/cert:text-white transition-colors">{cert}</span>
+                                            <span className="text-[10px] md:sm font-bold uppercase tracking-widest text-white/80 group-hover/cert:text-white transition-colors">{cert}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -415,7 +428,6 @@ const LandingPage = () => {
                                     <a href="https://wa.me/917736720936" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
                                         <MessageCircle size={22} />
                                     </a>
-                                    {/* UPDATED: Personal Instagram Link for Coach card */}
                                     <a href="https://www.instagram.com/athul_muralidharan_?igsh=MW9haDB2M25tMm52Mw==" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
                                         <InstagramIcon size={22} />
                                     </a>
@@ -429,6 +441,7 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Manifesto Section */}
             <section id="about" className="py-24 md:py-40 px-6 md:px-8 relative overflow-hidden bg-black text-white font-bold">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center opacity-[0.02] select-none pointer-events-none">
                     <span className="text-[30vw] font-black tracking-tighter italic uppercase leading-none block">MANIFESTO</span>
@@ -497,7 +510,6 @@ const LandingPage = () => {
                             <BrandLogo onClick={scrollToTop} />
                         </div>
                         <div className="flex gap-10">
-                            {/* UPDATED: Official Business Instagram Link for Footer */}
                             <a href="https://www.instagram.com/ajxfitclub?igsh=MXVpaGVzbWpnbzhkaw==" className="p-3 rounded-full border border-white/5 hover:border-[#ccff00] hover:text-[#ccff00] transition-all">
                                 <InstagramIcon size={18} />
                             </a>
@@ -505,7 +517,6 @@ const LandingPage = () => {
                                 <MessageCircle size={18} />
                             </a>
                         </div>
-                        {/* UPDATED: Footer Attribution with clear visibility and custom styled Njx */}
                         <div className="text-[10px] font-bold tracking-[0.3em] uppercase text-center md:text-right font-mono">
                             <span className="opacity-30">© 2024 AJXFITCLUB LLP • All Rights Reserved</span><br/>
                             <span className="opacity-30">Designed for Elite Performance</span><br/>
