@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Added signOut for the Terminate Session protocol
 import { auth, db } from '../firebase';
 import { signOut } from "firebase/auth";
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -9,10 +8,13 @@ import ProtocolSelection from './ProtocolSelection';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [tier, setTier] = useState('RECRUIT');
-    const [showPayWall, setShowPayWall] = useState(false);
+
+    // CORE STATE: Tracks both Tier and Status for the security handshake
+    const [status, setStatus] = useState('RECRUIT');
+    const [tier, setTier] = useState('NONE');
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showPayWall, setShowPayWall] = useState(false);
 
     useEffect(() => {
         const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
@@ -20,23 +22,26 @@ const Dashboard = () => {
                 setUser(currentUser);
                 setLoading(false);
 
-                // Real-time Tier Listener: Checks for 'INHOUSE' status
+                // REAL-TIME HANDSHAKE: Listens for status changes (e.g., Admin manual unlock)
                 const userDoc = doc(db, "users", currentUser.uid);
                 const unsubDoc = onSnapshot(userDoc, (doc) => {
                     if (doc.exists()) {
-                        setTier(doc.data().tier || 'RECRUIT');
+                        const data = doc.data();
+                        // Updates status and tier in real-time
+                        setStatus(data.status || 'RECRUIT');
+                        setTier(data.tier || 'NONE');
                     }
                 });
                 return () => unsubDoc();
             } else {
-                // Double-Guard: If no session, force exit to login
+                // If no session is found, force exit to login gate
                 navigate('/login', { replace: true });
             }
         });
         return () => unsubscribeAuth();
     }, [navigate]);
 
-    // Session Termination: Wipes auth and erases history stack
+    // SESSION TERMINATION: Clears auth and resets navigation
     const handleSignOut = async () => {
         try {
             await signOut(auth);
@@ -47,7 +52,8 @@ const Dashboard = () => {
         }
     };
 
-    const isLocked = tier === 'RECRUIT';
+    // LOCK LOGIC: Dashboard only unlocks if status is explicitly 'ACTIVE'
+    const isLocked = status !== 'ACTIVE';
 
     if (loading) {
         return (
@@ -63,7 +69,7 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen bg-black text-white font-sans antialiased relative selection:bg-[#ccff00] selection:text-black">
 
-            {/* --- DASHBOARD HEADER --- --- */}
+            {/* --- DASHBOARD HEADER --- */}
             <header className="w-full z-[100] bg-black/95 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between font-bold">
                     <div className="flex items-center gap-3 group cursor-default">
@@ -108,7 +114,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                    {/* --- THE LOCK OVERLAY --- --- */}
+                    {/* --- THE LOCK OVERLAY --- */}
                     {isLocked && (
                         <div className="absolute inset-x-0 -inset-y-4 z-50 flex items-center justify-center backdrop-blur-md bg-black/40 rounded-[40px] border border-white/5 shadow-2xl">
                             <div className="text-center p-10 max-w-sm bg-black/60 border border-white/10 rounded-[40px] backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)]">
@@ -129,7 +135,7 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* --- MOCKED CONTENT (BLURRED IF LOCKED) --- --- */}
+                    {/* --- MOCKED CONTENT (BLURRED IF LOCKED) --- */}
                     <div className={`md:col-span-2 bg-white/[0.03] border border-white/10 rounded-[40px] p-10 transition-all duration-1000 ${isLocked ? 'blur-2xl grayscale opacity-20 pointer-events-none' : 'opacity-100'}`}>
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-black italic uppercase tracking-widest text-[#ccff00]">Daily Training Protocol</h3>
