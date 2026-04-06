@@ -13,7 +13,7 @@ const ProtocolSelection = ({ onClose }) => {
     const deploymentTiers = [
         {
             name: "ONLINE MONITORING",
-            price: "₹2000",
+            price: "2000",
             period: "/ month",
             subtitle: "Professional guidance, remotely managed.",
             icon: <Monitor size={24} />,
@@ -29,7 +29,7 @@ const ProtocolSelection = ({ onClose }) => {
         },
         {
             name: "VIDEO CALL TRAINING",
-            price: "₹4800",
+            price: "4800",
             period: "/ month",
             subtitle: "Live sessions. Real-time correction.",
             icon: <Video size={24} />,
@@ -45,7 +45,7 @@ const ProtocolSelection = ({ onClose }) => {
         },
         {
             name: "IN-HOUSE PERSONAL TRAINING",
-            price: "₹8000",
+            price: "8000",
             period: "/ Month",
             subtitle: "Train at home. No gym needed.",
             icon: <Home size={24} />,
@@ -64,8 +64,8 @@ const ProtocolSelection = ({ onClose }) => {
     const handleScroll = (e) => {
         const container = e.target;
         const scrollPosition = container.scrollLeft;
-        // UI FIX: Accurate index calculation based on mobile scroll width
-        const index = Math.round(scrollPosition / (container.clientWidth * 0.85));
+        const cardWidth = container.clientWidth * 0.85;
+        const index = Math.round(scrollPosition / cardWidth);
         if (index !== activeIndex && index >= 0 && index < deploymentTiers.length) {
             setActiveIndex(index);
         }
@@ -77,7 +77,6 @@ const ProtocolSelection = ({ onClose }) => {
     };
 
     return (
-        /* UI FIX: Added font-sans and ensured fixed background is truly static */
         <div className="fixed inset-0 z-[200] bg-[#050505] flex flex-col antialiased selection:bg-[#ccff00] selection:text-black overflow-hidden font-sans">
 
             <style>{`
@@ -100,44 +99,45 @@ const ProtocolSelection = ({ onClose }) => {
                 </button>
             </header>
 
-            {/* UI FIX: overflow-y-auto prevents cards from being clipped on small screens */}
-            <main className="flex-1 flex flex-col justify-center overflow-y-auto overflow-x-hidden pt-4 pb-24 md:pb-0">
+            {/* UI FIX: Added overflow-y-auto to allow the entire card container to scroll vertically if content is too tall */}
+            <main className="flex-1 overflow-y-auto overflow-x-hidden pt-2 pb-32 scrollbar-hide">
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 px-6 md:px-10 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-hide w-full"
+                    /* UI FIX: Items-stretch ensures all cards take the height of the tallest content automatically */
+                    className="flex md:grid md:grid-cols-3 items-stretch gap-5 px-6 md:px-10 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-hide w-full max-w-7xl mx-auto"
                 >
                     {deploymentTiers.map((plan, index) => (
                         <div
                             key={index}
                             onClick={() => setSelectedPlan(plan.name)}
-                            /* UI FIX: Added shrink-0 and defined width for mobile horizontal swiping */
-                            className={`relative flex flex-col shrink-0 w-[85vw] md:w-full snap-center p-6 md:p-10 rounded-[32px] border transition-all duration-500 cursor-pointer
+                            /* UI FIX: Removed h-full constraints to allow card border to grow with content */
+                            className={`relative flex flex-col shrink-0 w-[85vw] md:w-full snap-center p-6 md:p-10 rounded-[40px] border transition-all duration-500 cursor-pointer mb-4
                                 ${selectedPlan === plan.name
-                                ? 'border-[#ccff00] bg-neutral-900 shadow-[0_0_40px_rgba(204,255,0,0.1)] scale-100'
-                                : 'border-white/5 bg-neutral-900/40 hover:border-white/20 scale-[0.98]'}`}
+                                ? 'border-[#ccff00] bg-neutral-900 shadow-[0_0_40px_rgba(204,255,0,0.1)]'
+                                : 'border-white/5 bg-neutral-900/40 hover:border-white/20'}`}
                         >
                             <div className="flex justify-between items-start mb-6 font-bold">
-                                <div className={`p-3 rounded-2xl transition-colors duration-500 ${selectedPlan === plan.name ? 'bg-[#ccff00] text-black' : 'bg-white/5 text-white/40'}`}>
+                                <div className={`p-3 rounded-2xl transition-colors duration-500 ${selectedPlan === plan.name ? 'bg-[#ccff00] text-black' : 'bg-white/10 text-white/40'}`}>
                                     {plan.icon}
                                 </div>
-                                <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border transition-all ${selectedPlan === plan.name ? 'border-[#ccff00] text-[#ccff00]' : 'border-white/10 text-white/20'}`}>
+                                <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border transition-all ${selectedPlan === plan.name ? 'border-[#ccff00] text-[#ccff00]' : 'border-white/10 text-white/20'}`}>
                                     {plan.tag}
                                 </span>
                             </div>
 
-                            <h3 className="text-lg md:text-2xl font-black tracking-tighter mb-1 italic leading-tight uppercase text-white">{plan.name}</h3>
-                            <p className="text-[10px] md:text-sm mb-6 font-medium text-white/40">{plan.subtitle}</p>
+                            <h3 className="text-xl md:text-2xl font-black tracking-tighter mb-1 italic leading-tight uppercase text-white">{plan.name}</h3>
+                            <p className="text-[11px] md:text-sm mb-6 font-medium text-white/40">{plan.subtitle}</p>
 
-                            <div className="flex items-baseline gap-1 mb-6">
-                                <span className={`text-4xl md:text-5xl font-black tracking-tighter transition-colors ${selectedPlan === plan.name ? 'text-[#ccff00]' : 'text-white'}`}>{plan.price}</span>
+                            <div className="flex items-baseline gap-1 mb-8">
+                                <span className={`text-4xl md:text-5xl font-black tracking-tighter transition-colors ${selectedPlan === plan.name ? 'text-[#ccff00]' : 'text-white'}`}>₹{plan.price}</span>
                                 <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest text-white/30">{plan.period}</span>
                             </div>
 
-                            <div className="space-y-3 md:space-y-4 mb-6 flex-grow">
+                            <div className="space-y-4 mb-6 flex-grow">
                                 {plan.features.map((feature, fIndex) => (
-                                    <div key={fIndex} className="flex items-center gap-3">
-                                        <Check className={`w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0 transition-colors ${selectedPlan === plan.name ? 'text-[#ccff00]' : 'text-white/20'}`} />
+                                    <div key={fIndex} className="flex items-start gap-3">
+                                        <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 transition-colors ${selectedPlan === plan.name ? 'text-[#ccff00]' : 'text-white/20'}`} />
                                         <span className={`text-[11px] md:text-sm font-medium transition-colors ${selectedPlan === plan.name ? 'text-white' : 'text-white/40'}`}>
                                             {feature}
                                         </span>
@@ -145,14 +145,15 @@ const ProtocolSelection = ({ onClose }) => {
                                 ))}
                             </div>
 
-                            <div className={`mt-2 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest transition-all ${selectedPlan === plan.name ? 'text-[#ccff00]' : 'text-white/10'}`}>
-                                {selectedPlan === plan.name ? <><Check size={12} /> Selected</> : "Tap to Select"}
+                            <div className={`mt-auto pt-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${selectedPlan === plan.name ? 'text-[#ccff00]' : 'text-white/10'}`}>
+                                {selectedPlan === plan.name ? <><Check size={14} /> Selected</> : "Tap to Select"}
                             </div>
                         </div>
                     ))}
                 </div>
 
-                <div className="flex md:hidden justify-center items-center gap-2 mt-6">
+                {/* SCROLL INDICATORS */}
+                <div className="flex md:hidden justify-center items-center gap-2 mt-4">
                     {deploymentTiers.map((_, i) => (
                         <div
                             key={i}
@@ -161,22 +162,23 @@ const ProtocolSelection = ({ onClose }) => {
                     ))}
                 </div>
 
-                <div className="text-center mt-6 mb-4">
-                    <button onClick={() => navigate('/verify-key')} className="text-white/20 hover:text-[#ccff00] text-[9px] font-bold uppercase tracking-[0.4em] transition-all">
+                <div className="text-center mt-8 px-6">
+                    <button onClick={() => navigate('/verify-key')} className="text-white/20 hover:text-[#ccff00] text-[10px] font-bold uppercase tracking-[0.4em] transition-all">
                         Already have an invite code?
                     </button>
                 </div>
             </main>
 
-            <div className="shrink-0 p-6 md:p-10 bg-gradient-to-t from-black via-black/95 to-transparent z-30">
+            {/* FOOTER ACTION */}
+            <div className="shrink-0 p-6 md:p-10 bg-gradient-to-t from-black via-black/95 to-transparent z-30 fixed bottom-0 left-0 w-full">
                 <div className="max-w-md mx-auto">
                     <button
                         onClick={handleAction}
-                        className="w-full py-5 bg-[#ccff00] text-black font-black uppercase tracking-[0.4em] text-[10px] rounded-3xl hover:bg-white transition-all duration-500 shadow-[0_20px_50px_rgba(204,255,0,0.3)] active:scale-95 flex items-center justify-center gap-3"
+                        className="w-full py-6 bg-[#ccff00] text-black font-black uppercase tracking-[0.4em] text-[11px] rounded-3xl hover:bg-white transition-all duration-500 shadow-[0_20px_50px_rgba(204,255,0,0.3)] active:scale-95 flex items-center justify-center gap-3"
                     >
-                        <MessageSquare size={16} />
+                        <MessageSquare size={18} />
                         <span>START TRANSFORMATION</span>
-                        <ChevronRight size={16} />
+                        <ChevronRight size={18} />
                     </button>
                 </div>
             </div>
