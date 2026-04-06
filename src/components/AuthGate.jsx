@@ -4,7 +4,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "../firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
-import { ArrowRight, User, ShieldCheck, ChevronRight, ChevronLeft, Check, Activity } from 'lucide-react';
+import { ArrowRight, User, ShieldCheck, ChevronRight, ChevronLeft, Check, Activity, AlertCircle } from 'lucide-react';
 import SocialLogin from "./SocialLogin.jsx";
 
 const AuthGate = () => {
@@ -51,7 +51,12 @@ const AuthGate = () => {
 
     const handleSendOTP = async (e) => {
         e?.preventDefault();
-        if (phoneNumber.length < 10) return;
+
+        // 1. Strict Validation: Prevent "Invalid Number" error
+        if (phoneNumber.length !== 10 || !/^\d+$/.test(phoneNumber)) {
+            setErrorMessage('Enter a valid 10-digit number');
+            return;
+        }
 
         setStatus('PROCESSING');
         setErrorMessage('');
@@ -60,26 +65,33 @@ const AuthGate = () => {
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
         try {
-            // STEP 1: Check if user exists in database to avoid logic loops
+            // 2. Check existence for UI feedback (Note: OTP is still required by Firebase for Login)
             const q = query(collection(db, "users"), where("phoneNumber", "==", fullPhoneNumber));
             const querySnapshot = await getDocs(q);
             const userExists = !querySnapshot.empty;
 
-            // STEP 2: Request Firebase OTP
             const result = await signInWithPhoneNumber(auth, fullPhoneNumber, window.recaptchaVerifier);
             setConfirmResult(result);
             setStatus('OTP_SENT');
 
-            console.log(userExists ? "Returning user detected." : "New recruit detected.");
+            if (userExists) setErrorMessage('Welcome back. Verifying identity...');
         } catch (error) {
-            console.error("AUTH_ERROR:", error);
-            setStatus('IDLE');
-            setErrorMessage('Limit reached or invalid number. Try again later.');
-            // Reset recaptcha so the user can try again immediately
+            console.error("AUTH_ERROR:", error.code);
+            setStatus('IDLE'); // Reset circling button
+
+            // 3. Handle specific Firebase Errors
+            if (error.code === 'auth/too-many-requests') {
+                setErrorMessage('SMS limit reached. Please try again in a few hours.');
+            } else if (error.code === 'auth/invalid-phone-number') {
+                setErrorMessage('Format error. Use 10 digits without spaces.');
+            } else {
+                setErrorMessage('Connection failed. Please try again.');
+            }
+
+            // Clear Recaptcha to allow immediate retry
             if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.render().then(widgetId => {
-                    window.grecaptcha.reset(widgetId);
-                });
+                window.recaptchaVerifier.clear();
+                window.recaptchaVerifier = null;
             }
         }
     };
@@ -88,11 +100,12 @@ const AuthGate = () => {
         e?.preventDefault();
         if (otp.length < 6) return;
         setStatus('VERIFYING');
+        setErrorMessage('');
         try {
             await confirmResult.confirm(otp);
         } catch (error) {
             setStatus('OTP_SENT');
-            setErrorMessage('Invalid code. Please check and try again.');
+            setErrorMessage('Incorrect code. Check your SMS.');
         }
     };
 
@@ -141,7 +154,8 @@ const AuthGate = () => {
                         {step === 1 ? (
                             <div className="space-y-5">
                                 {errorMessage && (
-                                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-wider text-center">
+                                    <div className={`p-3 rounded-xl border text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2 ${errorMessage.includes('Welcome') ? 'bg-[#ccff00]/10 border-[#ccff00]/20 text-[#ccff00]' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+                                        <AlertCircle size={14} />
                                         {errorMessage}
                                     </div>
                                 )}
@@ -152,9 +166,10 @@ const AuthGate = () => {
                                             <div className="w-14 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">+91</div>
                                             <input
                                                 type="tel"
-                                                placeholder="Phone Number"
+                                                maxLength="10"
+                                                placeholder="10-digit number"
                                                 value={phoneNumber}
-                                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                                                 className="flex-1 bg-white/[0.05] border border-white/10 rounded-2xl px-5 text-sm font-medium outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
                                             />
                                         </div>
@@ -162,14 +177,14 @@ const AuthGate = () => {
                                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                                             <div className="text-center">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-[#ccff00]">Code sent to {phoneNumber}</p>
-                                                <button type="button" onClick={() => setStatus('IDLE')} className="text-[8px] font-bold text-white/20 underline">Change Number</button>
+                                                <button type="button" onClick={() => { setStatus('IDLE'); setErrorMessage(''); }} className="text-[8px] font-bold text-white/20 underline">Change Number</button>
                                             </div>
                                             <input
                                                 type="text"
                                                 maxLength="6"
                                                 placeholder="000000"
                                                 value={otp}
-                                                onChange={(e) => setOtp(e.target.value)}
+                                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                                 className="w-full h-14 bg-white/[0.05] border border-white/10 rounded-2xl text-white text-center font-black tracking-[0.4em] outline-none text-xl placeholder:text-white/20"
                                             />
                                         </div>
@@ -186,6 +201,7 @@ const AuthGate = () => {
                                 <SocialLogin type="login" onAuthSuccess={(user) => checkUserStatus(user)} />
                             </div>
                         ) : (
+                            /* PROFILE SETUP SECTION */
                             <div className="space-y-4">
                                 <div className="relative h-12">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={14} />
