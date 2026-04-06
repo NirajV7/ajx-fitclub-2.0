@@ -26,18 +26,16 @@ const InstagramIcon = ({ size = 24, className = "" }) => (
 );
 
 // --- REFINED LOGO ---
+// --- REFINED LOGO ---
 const BrandLogo = ({ onClick }) => (
     <div
         onClick={onClick}
-        className="flex flex-row md:flex-col items-center md:items-start group cursor-pointer select-none md:gap-0 gap-1"
+        className="flex flex-row items-center group cursor-pointer select-none"
     >
-        <div className="relative">
-            <span className="text-lg md:text-2xl font-black italic tracking-tighter text-white leading-none block transition-all duration-500 group-hover:tracking-normal font-bold">
-                AJX
-            </span>
-            <div className="absolute -bottom-0.5 left-0 h-[1.5px] w-0 bg-[#ccff00] group-hover:w-full transition-all duration-500 shadow-[0_0_8px_rgba(204,255,0,0.5)] hidden md:block"></div>
-        </div>
-        <span className="text-lg md:text-[7px] font-black italic md:not-italic tracking-tighter md:tracking-[0.2em] uppercase text-[#ccff00] leading-none md:mt-0.5 md:self-stretch md:text-center md:border-t md:border-white/10 md:pt-0.5 opacity-100 md:opacity-80 group-hover:opacity-100 transition-all font-bold">
+        <span className="text-lg md:text-2xl font-black italic tracking-tighter text-white leading-none transition-all duration-500 font-bold">
+            AJX
+        </span>
+        <span className="text-lg md:text-2xl font-black italic tracking-tighter uppercase text-[#ccff00] leading-none transition-all font-bold">
             FITCLUB
         </span>
     </div>
