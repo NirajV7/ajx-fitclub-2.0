@@ -20,9 +20,8 @@ const AuthGate = () => {
     const [assessment, setAssessment] = useState({ firstName: '', goal: '' });
 
     const tacticalGoals = [
-        { id: 'SENIOR_STRENGTH', label: 'Senior Citizen Strengthening' },
+        { id: 'SENIOR_STRENGTH', label: 'Senior Strengthening' },
         { id: 'MUSCLE_GAIN', label: 'Muscle Gain' },
-        { id: 'WEIGHT_GAIN', label: 'Weight Gain' },
         { id: 'FAT_LOSS', label: 'Fat Loss & Toning' },
         { id: 'STRENGTH', label: 'Power & Strength' }
     ];
@@ -50,32 +49,23 @@ const AuthGate = () => {
     const handleSendOTP = async (e) => {
         e?.preventDefault();
         if (phoneNumber.length < 10) return;
-
         setStatus('PROCESSING');
         setupRecaptcha();
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-
         try {
             const result = await signInWithPhoneNumber(auth, fullPhoneNumber, window.recaptchaVerifier);
             setConfirmResult(result);
             setStatus('OTP_SENT');
-        } catch (error) {
-            console.error("OTP_SEND_ERROR:", error);
-            setStatus('ERROR');
-        }
+        } catch (error) { setStatus('ERROR'); }
     };
 
     const handleVerifyOTP = async (e) => {
         e?.preventDefault();
         if (otp.length < 6) return;
-
         setStatus('VERIFYING');
         try {
             await confirmResult.confirm(otp);
-        } catch (error) {
-            console.error("VERIFY_ERROR:", error);
-            setStatus('ERROR');
-        }
+        } catch (error) { setStatus('ERROR'); }
     };
 
     const finalizeProfile = async () => {
@@ -95,37 +85,39 @@ const AuthGate = () => {
     };
 
     return (
-        <div className="h-[100dvh] w-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans">
+        /* FIXED: Added fixed inset-0 and overflow-hidden to kill all scrolling */
+        <div className="fixed inset-0 w-full h-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans">
             <div id="recaptcha-container"></div>
 
-            <nav className="w-full flex items-center justify-between z-20 shrink-0">
+            {/* Header: Reduced margin for mobile fit */}
+            <nav className="w-full flex items-center justify-between z-20 shrink-0 mb-4">
                 <Link to="/" className="flex items-center gap-2 text-white/40 hover:text-[#ccff00] transition-colors group">
-                    <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    <ChevronLeft size={16} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Back</span>
                 </Link>
-                <span className="text-[10px] font-black italic uppercase tracking-[0.4em] text-white/20">AJX FIT CLUB</span>
+                <span className="text-[10px] font-black italic uppercase tracking-[0.4em] text-white/20">AJXFITCLUB</span>
             </nav>
 
             <div className="flex-1 flex flex-col items-center justify-center relative">
-                <div className="w-full max-w-[400px] z-10">
+                <div className="w-full max-w-[380px] z-10">
                     <div className="text-center mb-6">
-                        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.05]">
+                        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-xl border border-white/10 bg-white/[0.05]">
                             <ShieldCheck size={12} className="text-[#ccff00]" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80">Authorized Access</span>
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80">Secure Link</span>
                         </div>
                         <h1 className="text-4xl font-black italic uppercase tracking-tighter leading-[0.8]">
-                            {step === 1 ? 'Enter the' : 'Initialize'} <br />
+                            {step === 1 ? 'Enter the' : 'Setup'} <br />
                             <span className="text-white/20">{step === 1 ? 'Collective' : 'Profile'}</span>
                         </h1>
                     </div>
 
-                    <div className="w-full bg-neutral-900/40 border border-white/[0.08] backdrop-blur-3xl p-6 md:p-8 rounded-[40px] shadow-2xl">
+                    <div className="w-full bg-neutral-900/40 border border-white/[0.08] backdrop-blur-3xl p-6 rounded-[32px] shadow-2xl">
                         {step === 1 ? (
-                            <div className="space-y-6">
+                            <div className="space-y-5">
                                 <form onSubmit={status === 'OTP_SENT' ? handleVerifyOTP : handleSendOTP} className="space-y-4">
                                     {status !== 'OTP_SENT' && status !== 'VERIFYING' ? (
                                         <div className="flex gap-2 h-14">
-                                            <div className="w-16 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">+91</div>
+                                            <div className="w-14 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">+91</div>
                                             <input
                                                 type="tel"
                                                 placeholder="Phone Number"
@@ -135,25 +127,18 @@ const AuthGate = () => {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                            <div className="flex flex-col items-center justify-center text-center">
-                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ccff00] mb-1">Code sent to {phoneNumber}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setStatus('IDLE')}
-                                                    className="text-[8px] font-bold text-white/20 hover:text-white uppercase tracking-widest underline"
-                                                >
-                                                    Change Number
-                                                </button>
+                                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="text-center">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ccff00]">Code sent to {phoneNumber}</p>
+                                                <button type="button" onClick={() => setStatus('IDLE')} className="text-[8px] font-bold text-white/20 underline">Change Number</button>
                                             </div>
-                                            {/* OTP INPUT: Updated with shorter placeholder and white text */}
                                             <input
                                                 type="text"
                                                 maxLength="6"
                                                 placeholder="000000"
                                                 value={otp}
                                                 onChange={(e) => setOtp(e.target.value)}
-                                                className="w-full h-14 bg-white/[0.08] border border-[#ccff00]/40 rounded-2xl px-4 text-white text-center font-black tracking-[0.4em] md:tracking-[0.6em] outline-none text-xl placeholder:text-white/10"
+                                                className="w-full h-14 bg-white/[0.08] border border-[#ccff00]/40 rounded-2xl text-white text-center font-black tracking-[0.4em] outline-none text-xl placeholder:text-white/10"
                                             />
                                         </div>
                                     )}
@@ -161,67 +146,41 @@ const AuthGate = () => {
                                     <button
                                         type="submit"
                                         disabled={status === 'PROCESSING' || status === 'VERIFYING'}
-                                        className="w-full h-14 bg-[#ccff00] text-black font-black uppercase tracking-widest text-[10px] rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+                                        className="w-full h-14 bg-[#ccff00] text-black font-black uppercase tracking-widest text-[10px] rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all"
                                     >
-                                        {(status === 'PROCESSING' || status === 'VERIFYING') ? (
-                                            <Activity size={16} className="animate-spin" />
-                                        ) : (
-                                            <>
-                                                {status === 'OTP_SENT' ? 'Verify Entry' : 'Request Access'}
-                                                <ArrowRight size={16} />
-                                            </>
-                                        )}
+                                        {(status === 'PROCESSING' || status === 'VERIFYING') ? <Activity size={16} className="animate-spin" /> : <>{status === 'OTP_SENT' ? 'Verify' : 'Request'} <ArrowRight size={16} /></>}
                                     </button>
                                 </form>
                                 <SocialLogin type="login" onAuthSuccess={(user) => checkUserStatus(user)} />
                             </div>
                         ) : (
-                            <div className="space-y-5">
-                                <div className="relative h-14">
-                                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+                            <div className="space-y-4">
+                                <div className="relative h-12">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={14} />
                                     <input
                                         type="text"
                                         placeholder="Full Name"
-                                        className="w-full h-full bg-white/[0.05] border border-white/10 rounded-2xl pl-12 pr-6 text-sm font-medium outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
+                                        className="w-full h-full bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 text-sm outline-none focus:border-[#ccff00]/40"
                                         onChange={(e) => setAssessment({...assessment, firstName: e.target.value})}
                                     />
                                 </div>
-
-                                <div className="space-y-2.5">
-                                    <div className="flex items-center gap-2 ml-2">
-                                        <div className="w-1 h-1 rounded-full bg-[#ccff00]"></div>
-                                        <label className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Select Objective</label>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1.5">
-                                        {tacticalGoals.map((goal) => (
-                                            <button
-                                                key={goal.id}
-                                                type="button"
-                                                onClick={() => setAssessment({...assessment, goal: goal.id})}
-                                                className={`flex items-center justify-between px-5 py-3 rounded-xl border transition-all duration-300 ${
-                                                    assessment.goal === goal.id
-                                                        ? 'border-[#ccff00] bg-[#ccff00]/10 text-white'
-                                                        : 'border-white/5 bg-white/[0.03] text-white/30 hover:border-white/10'
-                                                }`}
-                                            >
-                                                <span className="text-[9px] font-black uppercase tracking-widest leading-none">{goal.label}</span>
-                                                {assessment.goal === goal.id && <Check size={12} className="text-[#ccff00]" />}
-                                            </button>
-                                        ))}
-                                    </div>
+                                <div className="grid grid-cols-1 gap-1.5">
+                                    {tacticalGoals.map((goal) => (
+                                        <button
+                                            key={goal.id}
+                                            onClick={() => setAssessment({...assessment, goal: goal.id})}
+                                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${assessment.goal === goal.id ? 'border-[#ccff00] bg-[#ccff00]/10 text-white' : 'border-white/5 bg-white/[0.02] text-white/30'}`}
+                                        >
+                                            {goal.label} {assessment.goal === goal.id && <Check size={12} className="text-[#ccff00]" />}
+                                        </button>
+                                    ))}
                                 </div>
-
                                 <button
                                     onClick={finalizeProfile}
                                     disabled={!assessment.goal || !assessment.firstName}
-                                    className={`w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all ${
-                                        assessment.goal && assessment.firstName
-                                            ? 'bg-[#ccff00] text-black shadow-[0_10px_30px_rgba(204,255,0,0.2)]'
-                                            : 'bg-white/5 text-white/10 cursor-not-allowed opacity-50'
-                                    }`}
+                                    className="w-full h-12 bg-[#ccff00] text-black font-black uppercase tracking-widest text-[10px] rounded-xl active:scale-95 transition-all disabled:opacity-20"
                                 >
-                                    Finalize Profile <ChevronRight size={16} />
+                                    Finalize <ChevronRight size={16} className="inline ml-1" />
                                 </button>
                             </div>
                         )}
