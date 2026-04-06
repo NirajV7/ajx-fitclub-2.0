@@ -250,7 +250,7 @@ const LandingPage = () => {
                                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all"></span>
                             </a>
                         ))}
-                        <Link to="/login">
+                        <Link to="/signup">
                             <button className="px-6 py-2 border border-white/20 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] active:scale-95 transition-all duration-500 font-black tracking-widest text-[10px] uppercase">
                                 LOGIN
                             </button>
@@ -494,7 +494,7 @@ const LandingPage = () => {
                                     One portal for all members. Access your training protocols, track your biometrics, or start your recruitment process.
                                 </p>
 
-                                <Link to="/login" className="w-full max-w-xs">
+                                <Link to="/signup" className="w-full max-w-xs">
                                     <button className="group/btn w-full py-5 bg-white text-black font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl hover:bg-[#ccff00] active:scale-95 transition-all duration-500 shadow-2xl flex items-center justify-center gap-3">
                                         <span>ENTER THE PORTAL</span>
                                         <ArrowRight size={16} className="group-hover/btn:translate-x-2 transition-transform" />
