@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "../firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 import { ArrowRight, User, ShieldCheck, ChevronRight, ChevronLeft, Check, Activity } from 'lucide-react';
 import SocialLogin from "./SocialLogin.jsx";
 
@@ -18,6 +18,7 @@ const AuthGate = () => {
     const [otp, setOtp] = useState('');
     const [confirmResult, setConfirmResult] = useState(null);
     const [assessment, setAssessment] = useState({ firstName: '', goal: '' });
+    const [errorMessage, setErrorMessage] = useState('');
 
     const tacticalGoals = [
         { id: 'SENIOR_STRENGTH', label: 'Senior Strengthening' },
@@ -42,21 +43,45 @@ const AuthGate = () => {
 
     const setupRecaptcha = () => {
         if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'invisible' });
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                'size': 'invisible'
+            });
         }
     };
 
     const handleSendOTP = async (e) => {
         e?.preventDefault();
         if (phoneNumber.length < 10) return;
+
         setStatus('PROCESSING');
+        setErrorMessage('');
         setupRecaptcha();
+
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+
         try {
+            // STEP 1: Check if user exists in database to avoid logic loops
+            const q = query(collection(db, "users"), where("phoneNumber", "==", fullPhoneNumber));
+            const querySnapshot = await getDocs(q);
+            const userExists = !querySnapshot.empty;
+
+            // STEP 2: Request Firebase OTP
             const result = await signInWithPhoneNumber(auth, fullPhoneNumber, window.recaptchaVerifier);
             setConfirmResult(result);
             setStatus('OTP_SENT');
-        } catch (error) { setStatus('ERROR'); }
+
+            console.log(userExists ? "Returning user detected." : "New recruit detected.");
+        } catch (error) {
+            console.error("AUTH_ERROR:", error);
+            setStatus('IDLE');
+            setErrorMessage('Limit reached or invalid number. Try again later.');
+            // Reset recaptcha so the user can try again immediately
+            if (window.recaptchaVerifier) {
+                window.recaptchaVerifier.render().then(widgetId => {
+                    window.grecaptcha.reset(widgetId);
+                });
+            }
+        }
     };
 
     const handleVerifyOTP = async (e) => {
@@ -65,7 +90,10 @@ const AuthGate = () => {
         setStatus('VERIFYING');
         try {
             await confirmResult.confirm(otp);
-        } catch (error) { setStatus('ERROR'); }
+        } catch (error) {
+            setStatus('OTP_SENT');
+            setErrorMessage('Invalid code. Please check and try again.');
+        }
     };
 
     const finalizeProfile = async () => {
@@ -74,18 +102,17 @@ const AuthGate = () => {
         try {
             await setDoc(doc(db, "users", user.uid), {
                 fullName: assessment.firstName.toUpperCase(),
-                phoneNumber: user.phoneNumber || "GOOGLE_AUTH",
+                phoneNumber: user.phoneNumber || `${countryCode}${phoneNumber}`,
                 status: 'RECRUIT',
                 tier: 'NONE',
                 assessment: assessment,
                 joinedAt: serverTimestamp()
             }, { merge: true });
             navigate("/dashboard", { replace: true });
-        } catch (error) { setStatus('ERROR'); }
+        } catch (error) { setStatus('IDLE'); }
     };
 
     return (
-        /* FIXED: touch-none and select-none prevents all mobile zooming/scrolling/bouncing */
         <div className="fixed inset-0 w-full h-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans touch-none select-none">
             <div id="recaptcha-container"></div>
 
@@ -98,7 +125,6 @@ const AuthGate = () => {
             </nav>
 
             <div className="flex-1 flex flex-col items-center justify-center relative">
-                {/* touch-auto allows interaction with the inputs/buttons inside the fixed container */}
                 <div className="w-full max-w-[380px] z-10 touch-auto">
                     <div className="text-center mb-6">
                         <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-xl border border-white/10 bg-white/[0.05]">
@@ -114,6 +140,12 @@ const AuthGate = () => {
                     <div className="w-full bg-neutral-900/40 border border-white/[0.08] backdrop-blur-3xl p-6 rounded-[32px] shadow-2xl">
                         {step === 1 ? (
                             <div className="space-y-5">
+                                {errorMessage && (
+                                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-wider text-center">
+                                        {errorMessage}
+                                    </div>
+                                )}
+
                                 <form onSubmit={status === 'OTP_SENT' ? handleVerifyOTP : handleSendOTP} className="space-y-4">
                                     {status !== 'OTP_SENT' && status !== 'VERIFYING' ? (
                                         <div className="flex gap-2 h-14">
@@ -132,7 +164,6 @@ const AuthGate = () => {
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-[#ccff00]">Code sent to {phoneNumber}</p>
                                                 <button type="button" onClick={() => setStatus('IDLE')} className="text-[8px] font-bold text-white/20 underline">Change Number</button>
                                             </div>
-                                            {/* FIXED: Standard styling with dark background and white text/placeholder */}
                                             <input
                                                 type="text"
                                                 maxLength="6"
