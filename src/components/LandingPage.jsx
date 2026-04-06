@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu , ShieldCheck } from 'lucide-center';
+import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu , ShieldCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
@@ -181,7 +181,6 @@ const LandingPage = () => {
         /* FIXED: touch-pan-y allows vertical scrolling while blocking all mobile zooming and horizontal wobble */
         <div className="min-h-screen bg-black text-white font-sans selection:bg-[#ccff00] selection:text-black antialiased relative overflow-x-hidden touch-pan-y select-none">
 
-            {/* Background Elements */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 {[...Array(20)].map((_, i) => (
                     <div
@@ -224,7 +223,6 @@ const LandingPage = () => {
                 .animate-ticker { animation: ticker 20s linear infinite; }
             `}</style>
 
-            {/* Navigation */}
             <nav className={`fixed w-full z-[100] transition-all duration-700 ${isScrolled ? 'bg-black/95 backdrop-blur-xl py-4 border-b border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]' : 'bg-transparent py-8'}`}>
                 <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between relative font-bold text-white">
                     <div className="md:hidden">
@@ -255,7 +253,6 @@ const LandingPage = () => {
                 </div>
             </nav>
 
-            {/* Hero Section */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
                 <div className="absolute inset-0 z-0">
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black z-10" />
@@ -305,7 +302,6 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Pillars Section */}
             <section id="pillars" className="relative pt-24 pb-12 px-8 bg-black">
                 <div className="max-w-7xl mx-auto text-white font-bold">
                     <div className="grid lg:grid-cols-3 gap-px bg-white/10 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
@@ -330,7 +326,6 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Plans Section */}
             <section id="plans" className="py-12 md:py-20 px-6 md:px-8 bg-black text-white font-bold">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-12 md:mb-16">
@@ -431,7 +426,6 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* --- MANIFESTO ABOUT SECTION --- */}
             <section id="about" className="py-24 md:py-40 px-6 md:px-8 relative overflow-hidden bg-black text-white font-bold">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center opacity-[0.02] select-none pointer-events-none">
                     <span className="text-[30vw] font-black tracking-tighter italic uppercase leading-none block">MANIFESTO</span>
@@ -463,7 +457,6 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* FINAL CTA - JOIN THE COLLECTIVE */}
             <footer id="experience" className="relative pt-32 pb-20 px-8 bg-black overflow-hidden border-t border-white/5 text-white font-bold">
                 <div className="max-w-7xl mx-auto relative z-10">
                     <div className="text-center mb-24">
@@ -515,7 +508,6 @@ const LandingPage = () => {
                 </div>
             </footer>
 
-            {/* Mobile Menu Overlay */}
             {mobileMenuOpen && (
                 <div className="fixed inset-0 z-[1000] bg-black/98 backdrop-blur-3xl p-8 flex flex-col justify-between animate-in slide-in-from-right duration-500 overflow-hidden font-bold">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] rotate-12 opacity-[0.03] select-none pointer-events-none text-[80vw] font-black italic font-bold">
