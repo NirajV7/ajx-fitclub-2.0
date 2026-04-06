@@ -85,11 +85,10 @@ const AuthGate = () => {
     };
 
     return (
-        /* FIXED: Added fixed inset-0 and overflow-hidden to kill all scrolling */
-        <div className="fixed inset-0 w-full h-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans">
+        /* FIXED: touch-none and select-none prevents all mobile zooming/scrolling/bouncing */
+        <div className="fixed inset-0 w-full h-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans touch-none select-none">
             <div id="recaptcha-container"></div>
 
-            {/* Header: Reduced margin for mobile fit */}
             <nav className="w-full flex items-center justify-between z-20 shrink-0 mb-4">
                 <Link to="/" className="flex items-center gap-2 text-white/40 hover:text-[#ccff00] transition-colors group">
                     <ChevronLeft size={16} />
@@ -99,7 +98,8 @@ const AuthGate = () => {
             </nav>
 
             <div className="flex-1 flex flex-col items-center justify-center relative">
-                <div className="w-full max-w-[380px] z-10">
+                {/* touch-auto allows interaction with the inputs/buttons inside the fixed container */}
+                <div className="w-full max-w-[380px] z-10 touch-auto">
                     <div className="text-center mb-6">
                         <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-xl border border-white/10 bg-white/[0.05]">
                             <ShieldCheck size={12} className="text-[#ccff00]" />
@@ -132,13 +132,14 @@ const AuthGate = () => {
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-[#ccff00]">Code sent to {phoneNumber}</p>
                                                 <button type="button" onClick={() => setStatus('IDLE')} className="text-[8px] font-bold text-white/20 underline">Change Number</button>
                                             </div>
+                                            {/* FIXED: Standard styling with dark background and white text/placeholder */}
                                             <input
                                                 type="text"
                                                 maxLength="6"
                                                 placeholder="000000"
                                                 value={otp}
                                                 onChange={(e) => setOtp(e.target.value)}
-                                                className="w-full h-14 bg-white/[0.08] border border-[#ccff00]/40 rounded-2xl text-white text-center font-black tracking-[0.4em] outline-none text-xl placeholder:text-white/10"
+                                                className="w-full h-14 bg-white/[0.05] border border-white/10 rounded-2xl text-white text-center font-black tracking-[0.4em] outline-none text-xl placeholder:text-white/20"
                                             />
                                         </div>
                                     )}
@@ -160,7 +161,7 @@ const AuthGate = () => {
                                     <input
                                         type="text"
                                         placeholder="Full Name"
-                                        className="w-full h-full bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 text-sm outline-none focus:border-[#ccff00]/40"
+                                        className="w-full h-full bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 text-sm outline-none focus:border-[#ccff00]/40 placeholder:text-white/20"
                                         onChange={(e) => setAssessment({...assessment, firstName: e.target.value})}
                                     />
                                 </div>
