@@ -119,7 +119,8 @@ const AuthGate = () => {
     };
 
     return (
-        <div className="fixed inset-0 w-full h-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans touch-none select-none">
+        /* UI FIX: Removed touch-none to allow selection. fixed inset-0 overflow-hidden still prevents page scrolling */
+        <div className="fixed inset-0 w-full h-full bg-[#080808] text-white flex flex-col p-6 overflow-hidden antialiased font-sans select-none">
             <div id="recaptcha-container"></div>
 
             <nav className="w-full flex items-center justify-between z-20 shrink-0 mb-4">
@@ -156,8 +157,22 @@ const AuthGate = () => {
                                 <form onSubmit={status === 'OTP_SENT' ? handleVerifyOTP : handleSendOTP} className="space-y-4">
                                     {status !== 'OTP_SENT' && status !== 'VERIFYING' ? (
                                         <div className="flex gap-2 h-14">
-                                            <div className="w-14 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">+91</div>
-                                            {/* FIXED: text-base (16px) prevents iOS auto-zoom during typing */}
+                                            {/* UI FIX: Relative container with hidden select to allow touch selection without changing look */}
+                                            <div className="relative w-14">
+                                                <select
+                                                    value={countryCode}
+                                                    onChange={(e) => setCountryCode(e.target.value)}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                >
+                                                    <option value="+91">+91 (IN)</option>
+                                                    <option value="+971">+971 (UAE)</option>
+                                                    <option value="+44">+44 (UK)</option>
+                                                    <option value="+1">+1 (US)</option>
+                                                </select>
+                                                <div className="w-full h-full bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center text-xs font-bold">
+                                                    {countryCode}
+                                                </div>
+                                            </div>
                                             <input
                                                 type="tel"
                                                 maxLength="10"
@@ -170,7 +185,7 @@ const AuthGate = () => {
                                     ) : (
                                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                                             <div className="text-center">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ccff00]">Code sent to {phoneNumber}</p>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ccff00]">Code sent to {countryCode} {phoneNumber}</p>
                                                 <button type="button" onClick={() => { setStatus('IDLE'); setErrorMessage(''); }} className="text-[8px] font-bold text-white/20 underline">Change Number</button>
                                             </div>
                                             <input
@@ -198,7 +213,6 @@ const AuthGate = () => {
                             <div className="space-y-4">
                                 <div className="relative h-12">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={14} />
-                                    {/* FIXED: text-base (16px) prevents iOS auto-zoom during typing */}
                                     <input
                                         type="text"
                                         placeholder="Full Name"
