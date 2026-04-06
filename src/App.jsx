@@ -3,11 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 // --- TACTICAL COMPONENT IMPORTS ---
 import LandingPage from "./components/LandingPage.jsx";
-import SignupPage from "./components/SignupPage.jsx";
-import SigninPage from "./components/LoginPage.jsx";
 import VerifyKey from "./components/VerifyKey.jsx";
 import Dashboard from "./components/Dashboard.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx"; // The "Bouncer" component
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AuthGate from "./components/AuthGate.jsx";// The "Bouncer" component
 
 function App() {
     return (
@@ -15,8 +14,8 @@ function App() {
             <Routes>
                 {/* --- PUBLIC ACCESS GATES --- */}
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/login" element={<SigninPage />} />
+                <Route path="/signup" element={<AuthGate />} />
+                <Route path="/login" element={<AuthGate />} />
 
                 {/* --- AUTHORIZED PERSONNEL ONLY --- */}
                 {/* Routes wrapped in ProtectedRoute require a Firebase session */}
