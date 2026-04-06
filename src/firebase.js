@@ -7,7 +7,7 @@ import { getAnalytics } from "firebase/analytics";
 // Your updated web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAOITgE0oZ8Kb7EqQn1oqnaKN_O9MG9pLQ",
-    authDomain: "ajxfitclub-v2.firebaseapp.com",
+    authDomain: "ajxfitclub.com",
     projectId: "ajxfitclub-v2",
     storageBucket: "ajxfitclub-v2.firebasestorage.app",
     messagingSenderId: "128715919039",
