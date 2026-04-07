@@ -428,7 +428,7 @@ const LandingPage = () => {
                                     <a href="https://wa.me/917736720936" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
                                         <MessageCircle size={22} />
                                     </a>
-                                    <a href="https://www.instagram.com/athul_muralidharan_?igsh=MW9haDB2M25tMm52Mw==" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
+                                    <a href="https://www.instagram.com/athulmuralidharan_?igsh=MTVsM244cGMxdGE5" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
                                         <InstagramIcon size={22} />
                                     </a>
                                     <a href="tel:+917736720936" className="group flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-[#ccff00]/40 text-[#ccff00] transition-all duration-500 hover:bg-[#ccff00] hover:text-black active:scale-90 hover:scale-110 hover:-rotate-6">
