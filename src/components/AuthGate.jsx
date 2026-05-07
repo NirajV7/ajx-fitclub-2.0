@@ -42,31 +42,10 @@ const AuthGate = () => {
     };
 
     const setupRecaptcha = () => {
-        // Check if grecaptcha is available
-        if (!window.grecaptcha) {
-            console.warn('reCAPTCHA not loaded, attempting manual verification...');
-            // Allow retry - reCAPTCHA script may still be loading
-            setErrorMessage('Loading security verification. Please try again.');
-            setStatus('IDLE');
-            return false;
-        }
-
         if (!window.recaptchaVerifier) {
             try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                    'size': 'invisible',
-                    'callback': (token) => {
-                        console.log('reCAPTCHA verified successfully');
-                    },
-                    'expired-callback': () => {
-                        console.warn('reCAPTCHA token expired');
-                        window.recaptchaVerifier = null;
-                    },
-                    'error-callback': () => {
-                        console.error('reCAPTCHA error occurred');
-                        setErrorMessage('Security verification failed. Refresh page and try again.');
-                        window.recaptchaVerifier = null;
-                    }
+                    'size': 'invisible'
                 });
             } catch (err) {
                 console.error('RecaptchaVerifier setup failed:', err);
