@@ -105,6 +105,17 @@ const LandingPage = () => {
         }
     };
 
+    const getPlanWhatsAppLink = (planName) => {
+        const coachNumber = '917736720936';
+        const messages = {
+            'ONLINE MONITORING': "Hi Coach Athul! I'm interested in the Online Monitoring plan (₹2000/month). Tell me more!",
+            'VIDEO CALL TRAINING': "Hi Coach Athul! I want to join the Video Call Training (₹4800/month). Can we discuss?",
+            'IN-HOUSE PERSONAL TRAINING': "Hi Coach Athul! I'm interested in In-House Personal Training (₹8000/month). Let's connect!"
+        };
+        const message = encodeURIComponent(messages[planName] || "Hi Coach Athul! I'm interested in AJX FitClub. Tell me more!");
+        return `https://wa.me/${coachNumber}?text=${message}`;
+    };
+
     const pillars = [
         {
             title: "ACCESS.",
@@ -239,11 +250,11 @@ const LandingPage = () => {
                                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#ccff00] group-hover/link:w-full transition-all"></span>
                             </a>
                         ))}
-                        <Link to="/signup">
+                        <a href="https://wa.me/917736720936?text=Hi%20Coach%20Athul!%20I'm%20interested%20in%20joining%20AJX%20FitClub.%20Tell%20me%20more!" target="_blank" rel="noopener noreferrer">
                             <button className="px-6 py-2 border border-white/20 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] active:scale-95 transition-all duration-500 font-black tracking-widest text-[10px] uppercase">
-                                LOGIN
+                                CONNECT
                             </button>
-                        </Link>
+                        </a>
                     </div>
 
                     <div className="md:hidden">
@@ -280,14 +291,14 @@ const LandingPage = () => {
                         The caliber of a club.<br className="md:hidden" /> The convenience of home.
                     </p>
 
-                    <Link to="/signup">
+                    <a href="https://wa.me/917736720936?text=Hi%20Coach%20Athul!%20I'm%20interested%20in%20joining%20AJX%20FitClub.%20Tell%20me%20more!" target="_blank" rel="noopener noreferrer">
                         <button className="group relative flex items-center justify-center gap-3 px-10 py-6 bg-white hover:bg-[#ccff00] text-black font-black uppercase tracking-[0.2em] text-[12px] rounded-full transition-all duration-500 hover:scale-105 active:scale-95 shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_40px_rgba(204,255,0,0.3)] mx-auto font-bold">
                             <span className="relative z-10 font-bold">Start Transformation</span>
                             <div className="w-6 h-6 flex items-center justify-center bg-black/5 rounded-full group-hover:translate-x-1 transition-transform duration-300">
                                 <ArrowRight className="w-4 h-4" />
                             </div>
                         </button>
-                    </Link>
+                    </a>
                 </div>
 
                 <div className="absolute bottom-4 left-0 w-full overflow-hidden opacity-20 pointer-events-none">
@@ -371,12 +382,16 @@ const LandingPage = () => {
                                     ))}
                                 </div>
 
-                                <button
-                                    onClick={() => navigate('/signup')}
-                                    className="w-full py-5 rounded-full font-black uppercase tracking-widest text-[10px] bg-white text-black transition-all hover:bg-[#ccff00] active:scale-90 shadow-[0_4px_20px_rgba(204,255,0,0.1)] font-bold"
+                                <a
+                                    href={getPlanWhatsAppLink(plan.name)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block w-full"
                                 >
-                                    {plan.buttonText}
-                                </button>
+                                    <button className="w-full py-5 rounded-full font-black uppercase tracking-widest text-[10px] bg-white text-black transition-all hover:bg-[#ccff00] active:scale-90 shadow-[0_4px_20px_rgba(204,255,0,0.1)] font-bold">
+                                        {plan.buttonText}
+                                    </button>
+                                </a>
                             </div>
                         ))}
                     </div>
@@ -493,12 +508,12 @@ const LandingPage = () => {
                                     One portal for all members. Access your training protocols, track your biometrics, or start your recruitment process.
                                 </p>
 
-                                <Link to="/signup" className="w-full max-w-xs">
+                                <a href="https://wa.me/917736720936?text=Hi%20Coach%20Athul!%20I'm%20interested%20in%20joining%20AJX%20FitClub.%20Tell%20me%20more!" target="_blank" rel="noopener noreferrer" className="w-full max-w-xs">
                                     <button className="group/btn w-full py-5 bg-white text-black font-black uppercase tracking-[0.4em] text-[11px] rounded-2xl hover:bg-[#ccff00] active:scale-95 transition-all duration-500 shadow-2xl flex items-center justify-center gap-3">
                                         <span>ENTER THE PORTAL</span>
                                         <ArrowRight size={16} className="group-hover/btn:translate-x-2 transition-transform" />
                                     </button>
-                                </Link>
+                                </a>
                             </div>
                         </div>
 
