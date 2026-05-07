@@ -44,7 +44,9 @@ const AuthGate = () => {
     const setupRecaptcha = () => {
         // Check if grecaptcha is available
         if (!window.grecaptcha) {
-            setErrorMessage('Security verification loading. Please wait and try again.');
+            console.warn('reCAPTCHA not loaded, attempting manual verification...');
+            // Allow retry - reCAPTCHA script may still be loading
+            setErrorMessage('Loading security verification. Please try again.');
             setStatus('IDLE');
             return false;
         }
@@ -97,7 +99,9 @@ const AuthGate = () => {
             const querySnapshot = await getDocs(q);
             const userExists = !querySnapshot.empty;
 
-            const result = await signInWithPhoneNumber(auth, fullPhoneNumber, window.recaptchaVerifier);
+            // Use recaptchaVerifier if available, otherwise let Firebase handle it
+            const verifier = window.recaptchaVerifier || undefined;
+            const result = await signInWithPhoneNumber(auth, fullPhoneNumber, verifier);
             setConfirmResult(result);
             setStatus('OTP_SENT');
 
@@ -109,10 +113,12 @@ const AuthGate = () => {
                 setErrorMessage('SMS limit reached. Please try again in a few hours.');
             } else if (error.code === 'auth/invalid-phone-number') {
                 setErrorMessage('Format error. Use 10 digits without spaces.');
-            } else if (error.code === 'auth/missing-app-credential') {
-                setErrorMessage('reCAPTCHA not ready. Refresh page and try again.');
+            } else if (error.code === 'auth/missing-app-credential' || error.code === 'auth/missing-phone-number') {
+                setErrorMessage('Verification issue. Refresh page and try again.');
+            } else if (error.code === 'auth/operation-not-allowed') {
+                setErrorMessage('Phone sign-in is not enabled. Contact support.');
             } else {
-                setErrorMessage('Connection failed. Please try again.');
+                setErrorMessage(error.message || 'Connection failed. Please try again.');
             }
             if (window.recaptchaVerifier) {
                 window.recaptchaVerifier.clear();
