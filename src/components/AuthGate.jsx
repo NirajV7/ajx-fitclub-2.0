@@ -42,11 +42,37 @@ const AuthGate = () => {
     };
 
     const setupRecaptcha = () => {
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'invisible'
-            });
+        // Check if grecaptcha is available
+        if (!window.grecaptcha) {
+            setErrorMessage('Security verification loading. Please wait and try again.');
+            setStatus('IDLE');
+            return false;
         }
+
+        if (!window.recaptchaVerifier) {
+            try {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    'size': 'invisible',
+                    'callback': (token) => {
+                        console.log('reCAPTCHA verified successfully');
+                    },
+                    'expired-callback': () => {
+                        console.warn('reCAPTCHA token expired');
+                        window.recaptchaVerifier = null;
+                    },
+                    'error-callback': () => {
+                        console.error('reCAPTCHA error occurred');
+                        setErrorMessage('Security verification failed. Refresh page and try again.');
+                        window.recaptchaVerifier = null;
+                    }
+                });
+            } catch (err) {
+                console.error('RecaptchaVerifier setup failed:', err);
+                setErrorMessage('Security setup error. Refresh the page.');
+                return false;
+            }
+        }
+        return true;
     };
 
     const handleSendOTP = async (e) => {
@@ -58,7 +84,11 @@ const AuthGate = () => {
 
         setStatus('PROCESSING');
         setErrorMessage('');
-        setupRecaptcha();
+
+        // Setup reCAPTCHA and check if it succeeded
+        if (!setupRecaptcha()) {
+            return;
+        }
 
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
@@ -73,12 +103,14 @@ const AuthGate = () => {
 
             if (userExists) setErrorMessage('Welcome back. Verifying identity...');
         } catch (error) {
-            console.error("AUTH_ERROR:", error.code);
+            console.error("AUTH_ERROR:", error.code, error.message);
             setStatus('IDLE');
             if (error.code === 'auth/too-many-requests') {
                 setErrorMessage('SMS limit reached. Please try again in a few hours.');
             } else if (error.code === 'auth/invalid-phone-number') {
                 setErrorMessage('Format error. Use 10 digits without spaces.');
+            } else if (error.code === 'auth/missing-app-credential') {
+                setErrorMessage('reCAPTCHA not ready. Refresh page and try again.');
             } else {
                 setErrorMessage('Connection failed. Please try again.');
             }
