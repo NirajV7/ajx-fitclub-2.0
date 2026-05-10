@@ -137,7 +137,7 @@ const LandingPage = () => {
     const plans = [
         {
             name: "ONLINE MONITORING",
-            price: "₹2000",
+            price: "₹1999",
             period: "/ month",
             subtitle: "Professional guidance, remotely managed.",
             icon: <Monitor className="w-6 h-6" />,
@@ -154,7 +154,7 @@ const LandingPage = () => {
         },
         {
             name: "VIDEO CALL TRAINING",
-            price: "₹4800",
+            price: "₹4799",
             period: "/ month",
             subtitle: "Live sessions. Real-time correction.",
             icon: <Video className="w-6 h-6" />,
@@ -171,7 +171,7 @@ const LandingPage = () => {
         },
         {
             name: "IN-HOUSE PERSONAL TRAINING",
-            price: "₹8000",
+            price: "₹7999",
             period: "/ Month",
             subtitle: "Train at home. No gym needed.",
             icon: <Home className="w-6 h-6" />,
