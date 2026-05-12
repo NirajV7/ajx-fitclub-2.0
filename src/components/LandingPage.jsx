@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Lock, Award, ChevronDown, Activity, Cpu , ShieldCheck } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { MapPin, Shield, Wind, ArrowRight, X, Check, Phone, MessageCircle, Monitor, Video, Home, User, Award, ChevronDown, Cpu, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
 const InstagramIcon = ({ size = 24, className = "" }) => (
     <svg
@@ -51,6 +52,14 @@ const MobileMenuToggle = ({ isOpen, onClick, side }) => (
     </button>
 );
 
+const backgroundParticles = [...Array(20)].map((_, i) => ({
+    id: i,
+    top: `${(i * 37) % 100}%`,
+    left: `${(i * 61 + 13) % 100}%`,
+    animation: `float ${10 + ((i * 7) % 20)}s linear infinite`,
+    animationDelay: `-${(i * 11) % 20}s`
+}));
+
 const LandingPage = () => {
     const [user, authLoading] = useAuthState(auth);
     const navigate = useNavigate();
@@ -59,7 +68,25 @@ const LandingPage = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isVideoLoaded, setIsVideoLoaded] = useState(false);
     const [activePlanIndex, setActivePlanIndex] = useState(0);
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [leadForm, setLeadForm] = useState({ name: '', phone: '' });
+    const [leadStatus, setLeadStatus] = useState('idle');
+    const [leadError, setLeadError] = useState('');
     const plansRef = useRef(null);
+
+    const isLeadModalOpen = Boolean(selectedPlan);
+
+    const resetLeadForm = () => {
+        setSelectedPlan(null);
+        setLeadForm({ name: '', phone: '' });
+        setLeadStatus('idle');
+        setLeadError('');
+    };
+
+    const closeLeadForm = () => {
+        if (leadStatus === 'saving') return;
+        resetLeadForm();
+    };
 
     useEffect(() => {
         if (user && !authLoading) {
@@ -71,10 +98,26 @@ const LandingPage = () => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
         };
+        const videoLoadTimer = setTimeout(() => setIsVideoLoaded(true), 500);
         window.addEventListener('scroll', handleScroll);
-        setTimeout(() => setIsVideoLoaded(true), 500);
-        return () => window.removeEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(videoLoadTimer);
+        };
     }, []);
+
+    useEffect(() => {
+        if (!isLeadModalOpen) return;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape' && leadStatus !== 'saving') {
+                resetLeadForm();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isLeadModalOpen, leadStatus]);
 
     if (authLoading || user) {
         return (
@@ -92,6 +135,11 @@ const LandingPage = () => {
         setMobileMenuOpen(false);
     };
 
+    const scrollToPlans = () => {
+        document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setMobileMenuOpen(false);
+    };
+
     const handlePlansScroll = () => {
         if (plansRef.current) {
             const { scrollLeft, clientWidth, scrollWidth } = plansRef.current;
@@ -105,15 +153,59 @@ const LandingPage = () => {
         }
     };
 
-    const getPlanWhatsAppLink = (planName) => {
-        const coachNumber = '917736720936';
-        const messages = {
-            'ONLINE MONITORING': "Hi Coach Athul! I'm interested in the Online Monitoring plan (₹2000/month). Tell me more!",
-            'VIDEO CALL TRAINING': "Hi Coach Athul! I want to join the Video Call Training (₹4800/month). Can we discuss?",
-            'IN-HOUSE PERSONAL TRAINING': "Hi Coach Athul! I'm interested in In-House Personal Training (₹8000/month). Let's connect!"
-        };
-        const message = encodeURIComponent(messages[planName] || "Hi Coach Athul! I'm interested in AJX FitClub. Tell me more!");
-        return `https://wa.me/${coachNumber}?text=${message}`;
+    const openLeadForm = (plan) => {
+        setSelectedPlan(plan);
+        setLeadForm({ name: '', phone: '' });
+        setLeadStatus('idle');
+        setLeadError('');
+    };
+
+    const handleLeadInputChange = (event) => {
+        const { name, value } = event.target;
+        const nextValue = name === 'phone' ? value.replace(/\D/g, '').slice(0, 10) : value;
+        setLeadForm((current) => ({ ...current, [name]: nextValue }));
+        setLeadError('');
+    };
+
+    const handleLeadSubmit = async (event) => {
+        event.preventDefault();
+        if (!selectedPlan || leadStatus === 'saving') return;
+
+        const name = leadForm.name.trim();
+        const phoneDigits = leadForm.phone.replace(/\D/g, '');
+        const phone = `+91${phoneDigits}`;
+
+        if (name.length < 2) {
+            setLeadError('Enter your name.');
+            return;
+        }
+
+        if (phoneDigits.length !== 10) {
+            setLeadError('Enter a 10 digit mobile number.');
+            return;
+        }
+
+        try {
+            setLeadStatus('saving');
+            setLeadError('');
+
+            await addDoc(collection(db, 'landingLeads'), {
+                name,
+                phone,
+                planName: selectedPlan.name,
+                planPrice: selectedPlan.price,
+                planPeriod: selectedPlan.period,
+                source: 'landing_plan_card',
+                status: 'new',
+                createdAt: serverTimestamp()
+            });
+
+            setLeadStatus('success');
+        } catch (error) {
+            console.error('Lead form submit failed:', error);
+            setLeadStatus('idle');
+            setLeadError('Could not submit. Please try again.');
+        }
     };
 
     const pillars = [
@@ -192,15 +284,15 @@ const LandingPage = () => {
         <div className="min-h-screen bg-black text-white font-sans antialiased relative overflow-x-hidden selection:bg-[#ccff00] selection:text-black">
 
             <div className="fixed inset-0 pointer-events-none z-0">
-                {[...Array(20)].map((_, i) => (
+                {backgroundParticles.map((particle) => (
                     <div
-                        key={i}
+                        key={particle.id}
                         className="absolute w-1 h-1 bg-[#ccff00] rounded-full blur-[1px] opacity-20"
                         style={{
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                            animation: `float ${10 + Math.random() * 20}s linear infinite`,
-                            animationDelay: `-${Math.random() * 20}s`
+                            top: particle.top,
+                            left: particle.left,
+                            animation: particle.animation,
+                            animationDelay: particle.animationDelay
                         }}
                     />
                 ))}
@@ -291,14 +383,16 @@ const LandingPage = () => {
                         The caliber of a club.<br className="md:hidden" /> The convenience of home.
                     </p>
 
-                    <a href="https://wa.me/917736720936?text=Hi%20Coach%20Athul!%20I'm%20interested%20in%20joining%20AJX%20FitClub.%20Tell%20me%20more!" target="_blank" rel="noopener noreferrer">
-                        <button className="group relative flex items-center justify-center gap-3 px-10 py-6 bg-white hover:bg-[#ccff00] text-black font-black uppercase tracking-[0.2em] text-[12px] rounded-full transition-all duration-500 hover:scale-105 active:scale-95 shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_40px_rgba(204,255,0,0.3)] mx-auto font-bold">
-                            <span className="relative z-10 font-bold">Start Transformation</span>
-                            <div className="w-6 h-6 flex items-center justify-center bg-black/5 rounded-full group-hover:translate-x-1 transition-transform duration-300">
-                                <ArrowRight className="w-4 h-4" />
-                            </div>
-                        </button>
-                    </a>
+                    <button
+                        type="button"
+                        onClick={scrollToPlans}
+                        className="group relative flex items-center justify-center gap-3 px-10 py-6 bg-white hover:bg-[#ccff00] text-black font-black uppercase tracking-[0.2em] text-[12px] rounded-full transition-all duration-500 hover:scale-105 active:scale-95 shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_40px_rgba(204,255,0,0.3)] mx-auto font-bold"
+                    >
+                        <span className="relative z-10 font-bold">Start Transformation</span>
+                        <div className="w-6 h-6 flex items-center justify-center bg-black/5 rounded-full group-hover:translate-x-1 transition-transform duration-300">
+                            <ArrowRight className="w-4 h-4" />
+                        </div>
+                    </button>
                 </div>
 
                 <div className="absolute bottom-4 left-0 w-full overflow-hidden opacity-20 pointer-events-none">
@@ -382,16 +476,13 @@ const LandingPage = () => {
                                     ))}
                                 </div>
 
-                                <a
-                                    href={getPlanWhatsAppLink(plan.name)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block w-full"
+                                <button
+                                    type="button"
+                                    onClick={() => openLeadForm(plan)}
+                                    className="w-full py-5 rounded-full font-black uppercase tracking-widest text-[10px] bg-white text-black transition-all hover:bg-[#ccff00] active:scale-90 shadow-[0_4px_20px_rgba(204,255,0,0.1)] font-bold"
                                 >
-                                    <button className="w-full py-5 rounded-full font-black uppercase tracking-widest text-[10px] bg-white text-black transition-all hover:bg-[#ccff00] active:scale-90 shadow-[0_4px_20px_rgba(204,255,0,0.1)] font-bold">
-                                        {plan.buttonText}
-                                    </button>
-                                </a>
+                                    {plan.buttonText}
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -540,6 +631,130 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
+
+            {isLeadModalOpen && (
+                <div
+                    className="fixed inset-0 z-[1200] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-xl px-4 pb-4 pt-20 md:p-8"
+                    onClick={closeLeadForm}
+                    role="presentation"
+                >
+                    <div
+                        className="relative w-full max-w-md rounded-[32px] md:rounded-[36px] border border-white/10 bg-neutral-950 text-white shadow-[0_25px_80px_rgba(0,0,0,0.65)] overflow-hidden"
+                        onClick={(event) => event.stopPropagation()}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="lead-form-title"
+                    >
+                        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#ccff00]/60 to-transparent"></div>
+                        <button
+                            type="button"
+                            onClick={closeLeadForm}
+                            disabled={leadStatus === 'saving'}
+                            aria-label="Close lead form"
+                            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/60 transition-all hover:border-[#ccff00]/50 hover:text-[#ccff00] disabled:opacity-30"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        {leadStatus === 'success' ? (
+                            <div className="p-8 md:p-10 text-center font-bold">
+                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl border border-[#ccff00]/30 bg-[#ccff00]/10 text-[#ccff00]">
+                                    <ShieldCheck size={32} />
+                                </div>
+                                <h3 id="lead-form-title" className="mb-4 text-4xl font-black italic uppercase tracking-tighter text-white">
+                                    Protocol Initiated.
+                                </h3>
+                                <p className="mx-auto mb-8 max-w-xs text-sm font-bold uppercase leading-relaxed tracking-widest text-white/50">
+                                    Coach Athul will get in touch with you soon.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={resetLeadForm}
+                                    className="w-full rounded-full bg-white py-5 text-[10px] font-black uppercase tracking-[0.35em] text-black transition-all hover:bg-[#ccff00] active:scale-95"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleLeadSubmit} className="p-8 md:p-10 font-bold">
+                                <div className="mb-8 pr-12">
+                                    <span className="mb-3 block text-[9px] font-black uppercase tracking-[0.4em] text-[#ccff00]">
+                                        {selectedPlan.name}
+                                    </span>
+                                    <h3 id="lead-form-title" className="text-4xl font-black italic uppercase leading-none tracking-tighter text-white">
+                                        Start Protocol
+                                    </h3>
+                                    <p className="mt-4 text-xs font-bold uppercase leading-relaxed tracking-widest text-white/40">
+                                        Share your details. Coach Athul will take it from here.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="block">
+                                        <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
+                                            <User size={13} className="text-[#ccff00]" />
+                                            Name
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={leadForm.name}
+                                            onChange={handleLeadInputChange}
+                                            minLength={2}
+                                            required
+                                            disabled={leadStatus === 'saving'}
+                                            autoComplete="name"
+                                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-base font-bold text-white outline-none transition-all placeholder:text-white/20 focus:border-[#ccff00]/60 focus:bg-white/10 disabled:opacity-50"
+                                            placeholder="Your name"
+                                        />
+                                    </label>
+
+                                    <label className="block">
+                                        <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
+                                            <Phone size={13} className="text-[#ccff00]" />
+                                            Phone Number
+                                        </span>
+                                        <div className="flex rounded-2xl border border-white/10 bg-white/5 transition-all focus-within:border-[#ccff00]/60 focus-within:bg-white/10">
+                                            <span className="flex items-center border-r border-white/10 px-5 text-base font-black text-[#ccff00]">
+                                                +91
+                                            </span>
+                                            <input
+                                                type="tel"
+                                                name="phone"
+                                                value={leadForm.phone}
+                                                onChange={handleLeadInputChange}
+                                                required
+                                                disabled={leadStatus === 'saving'}
+                                                autoComplete="tel-national"
+                                                inputMode="numeric"
+                                                pattern="[0-9]{10}"
+                                                maxLength={10}
+                                                className="w-full bg-transparent px-5 py-4 text-base font-bold text-white outline-none placeholder:text-white/20 disabled:opacity-50"
+                                                placeholder="9876543210"
+                                            />
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {leadError && (
+                                    <p className="mt-5 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-xs font-bold uppercase tracking-widest text-red-200">
+                                        {leadError}
+                                    </p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={leadStatus === 'saving'}
+                                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-white py-5 text-[10px] font-black uppercase tracking-[0.35em] text-black transition-all hover:bg-[#ccff00] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    <span>{leadStatus === 'saving' ? 'Submitting' : 'Submit'}</span>
+                                    <ArrowRight size={16} />
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {mobileMenuOpen && (
                 <div className="fixed inset-0 z-[1000] bg-black/98 backdrop-blur-3xl p-8 flex flex-col justify-between animate-in slide-in-from-right duration-500 overflow-hidden font-bold">
